@@ -97,7 +97,10 @@ android {
 }
 
 dependencies {
-    implementation(libs.simple.mobile.tools.commons)
+    implementation(libs.simple.mobile.tools.commons) {
+        exclude("com.github.duolingo", "rtl-viewpager")
+    }
+    implementation(mapOf("name" to "rtl-viewpager-940f12724f", "ext" to "aar"))
     implementation(libs.eventbus)
     implementation(libs.androidx.media)
     implementation(libs.androidx.swiperefreshlayout)
