@@ -4,9 +4,9 @@ import android.content.Context
 import com.simplemobiletools.commons.extensions.addBit
 import com.simplemobiletools.commons.extensions.getParentPath
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
-import com.simplemobiletools.musicplayer.extensions.*
-import com.simplemobiletools.musicplayer.inlines.indexOfFirstOrNull
-import com.simplemobiletools.musicplayer.models.*
+import com.satya.musicplayer.extensions.*
+import com.satya.musicplayer.inlines.indexOfFirstOrNull
+import com.satya.musicplayer.models.*
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 

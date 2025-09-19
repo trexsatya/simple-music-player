@@ -7,10 +7,10 @@ import android.provider.MediaStore.Audio
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.isQPlus
 import com.simplemobiletools.commons.helpers.isRPlus
-import com.simplemobiletools.musicplayer.extensions.audioHelper
-import com.simplemobiletools.musicplayer.extensions.config
-import com.simplemobiletools.musicplayer.models.Events
-import com.simplemobiletools.musicplayer.models.Track
+import com.satya.musicplayer.extensions.audioHelper
+import com.satya.musicplayer.extensions.config
+import com.satya.musicplayer.models.Events
+import com.satya.musicplayer.models.Track
 import org.greenrobot.eventbus.EventBus
 import java.io.File
 import kotlin.math.min

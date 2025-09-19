@@ -6,9 +6,9 @@ import androidx.media3.common.util.UnstableApi
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.simplemobiletools.commons.extensions.toast
-import com.simplemobiletools.musicplayer.extensions.config
-import com.simplemobiletools.musicplayer.helpers.EQUALIZER_PRESET_CUSTOM
-import com.simplemobiletools.musicplayer.playback.player.SimpleMusicPlayer
+import com.satya.musicplayer.extensions.config
+import com.satya.musicplayer.helpers.EQUALIZER_PRESET_CUSTOM
+import com.satya.musicplayer.playback.player.SimpleMusicPlayer
 
 @UnstableApi
 object SimpleEqualizer {

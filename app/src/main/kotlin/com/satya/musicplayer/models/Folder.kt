@@ -2,8 +2,8 @@ package com.satya.musicplayer.models
 
 import com.simplemobiletools.commons.helpers.AlphanumericComparator
 import com.simplemobiletools.commons.helpers.SORT_DESCENDING
-import com.simplemobiletools.musicplayer.extensions.sortSafely
-import com.simplemobiletools.musicplayer.helpers.PLAYER_SORT_BY_TITLE
+import com.satya.musicplayer.extensions.sortSafely
+import com.satya.musicplayer.helpers.PLAYER_SORT_BY_TITLE
 
 data class Folder(val title: String, val trackCount: Int, val path: String) {
     companion object {

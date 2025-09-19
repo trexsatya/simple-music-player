@@ -6,8 +6,8 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ShuffleOrder.DefaultShuffleOrder
-import com.simplemobiletools.musicplayer.extensions.*
-import com.simplemobiletools.musicplayer.inlines.indexOfFirstOrNull
+import com.satya.musicplayer.extensions.*
+import com.satya.musicplayer.inlines.indexOfFirstOrNull
 import kotlinx.coroutines.*
 
 private const val DEFAULT_SHUFFLE_ORDER_SEED = 42L

@@ -33,7 +33,7 @@ app-build-kotlinJVMTarget = "17"
 #Helpers
 shortcut-badger = "1.1.22"
 #versioning
-app-version-appId = "com.simplemobiletools.musicplayer"
+app-version-appId = "com.satya.musicplayer"
 app-version-versionCode = "119"
 app-version-versionName = "5.18.3"
 [libraries]

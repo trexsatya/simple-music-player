@@ -1,7 +1,7 @@
 package com.satya.musicplayer.activities
 
 import com.simplemobiletools.commons.activities.BaseSimpleActivity
-import com.simplemobiletools.musicplayer.R
+import com.satya.musicplayer.R
 
 open class SimpleActivity : BaseSimpleActivity() {
     override fun getAppIconIDs() = arrayListOf(

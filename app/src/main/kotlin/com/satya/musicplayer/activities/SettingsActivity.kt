@@ -9,15 +9,15 @@ import com.simplemobiletools.commons.helpers.NavigationIcon
 import com.simplemobiletools.commons.helpers.isQPlus
 import com.simplemobiletools.commons.helpers.isTiramisuPlus
 import com.simplemobiletools.commons.models.RadioItem
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.databinding.ActivitySettingsBinding
-import com.simplemobiletools.musicplayer.dialogs.ManageVisibleTabsDialog
-import com.simplemobiletools.musicplayer.extensions.config
-import com.simplemobiletools.musicplayer.extensions.sendCommand
-import com.simplemobiletools.musicplayer.helpers.SHOW_FILENAME_ALWAYS
-import com.simplemobiletools.musicplayer.helpers.SHOW_FILENAME_IF_UNAVAILABLE
-import com.simplemobiletools.musicplayer.helpers.SHOW_FILENAME_NEVER
-import com.simplemobiletools.musicplayer.playback.CustomCommands
+import com.satya.musicplayer.R
+import com.satya.musicplayer.databinding.ActivitySettingsBinding
+import com.satya.musicplayer.dialogs.ManageVisibleTabsDialog
+import com.satya.musicplayer.extensions.config
+import com.satya.musicplayer.extensions.sendCommand
+import com.satya.musicplayer.helpers.SHOW_FILENAME_ALWAYS
+import com.satya.musicplayer.helpers.SHOW_FILENAME_IF_UNAVAILABLE
+import com.satya.musicplayer.helpers.SHOW_FILENAME_NEVER
+import com.satya.musicplayer.playback.CustomCommands
 import java.util.Locale
 import kotlin.system.exitProcess
 

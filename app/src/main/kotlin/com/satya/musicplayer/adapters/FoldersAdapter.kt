@@ -7,13 +7,13 @@ import com.simplemobiletools.commons.activities.BaseSimpleActivity
 import com.simplemobiletools.commons.extensions.highlightTextPart
 import com.simplemobiletools.commons.extensions.setupViewBackground
 import com.simplemobiletools.commons.views.MyRecyclerView
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.databinding.ItemFolderBinding
-import com.simplemobiletools.musicplayer.extensions.audioHelper
-import com.simplemobiletools.musicplayer.extensions.config
-import com.simplemobiletools.musicplayer.models.Events
-import com.simplemobiletools.musicplayer.models.Folder
-import com.simplemobiletools.musicplayer.models.Track
+import com.satya.musicplayer.R
+import com.satya.musicplayer.databinding.ItemFolderBinding
+import com.satya.musicplayer.extensions.audioHelper
+import com.satya.musicplayer.extensions.config
+import com.satya.musicplayer.models.Events
+import com.satya.musicplayer.models.Folder
+import com.satya.musicplayer.models.Track
 import org.greenrobot.eventbus.EventBus
 
 class FoldersAdapter(

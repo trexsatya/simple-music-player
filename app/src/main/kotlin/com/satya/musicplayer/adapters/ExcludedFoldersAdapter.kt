@@ -11,8 +11,8 @@ import com.simplemobiletools.commons.extensions.humanizePath
 import com.simplemobiletools.commons.extensions.setupViewBackground
 import com.simplemobiletools.commons.interfaces.RefreshRecyclerViewListener
 import com.simplemobiletools.commons.views.MyRecyclerView
-import com.simplemobiletools.musicplayer.databinding.ItemExcludedFolderBinding
-import com.simplemobiletools.musicplayer.extensions.config
+import com.satya.musicplayer.databinding.ItemExcludedFolderBinding
+import com.satya.musicplayer.extensions.config
 
 class ExcludedFoldersAdapter(
     activity: BaseSimpleActivity,

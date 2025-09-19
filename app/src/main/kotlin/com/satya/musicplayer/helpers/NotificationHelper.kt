@@ -12,8 +12,8 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.simplemobiletools.commons.extensions.notificationManager
 import com.simplemobiletools.commons.helpers.isOreoPlus
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.activities.MainActivity
+import com.satya.musicplayer.R
+import com.satya.musicplayer.activities.MainActivity
 
 /** Helper class to manage all-things-notification. */
 @SuppressLint("NewApi")

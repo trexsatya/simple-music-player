@@ -7,11 +7,11 @@ import com.simplemobiletools.commons.dialogs.PropertiesDialog
 import com.simplemobiletools.commons.extensions.rescanPaths
 import com.simplemobiletools.commons.extensions.sharePathsIntent
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
-import com.simplemobiletools.musicplayer.BuildConfig
-import com.simplemobiletools.musicplayer.dialogs.SelectPlaylistDialog
-import com.simplemobiletools.musicplayer.helpers.FLAG_MANUAL_CACHE
-import com.simplemobiletools.musicplayer.helpers.RoomHelper
-import com.simplemobiletools.musicplayer.models.Track
+import com.satya.musicplayer.BuildConfig
+import com.satya.musicplayer.dialogs.SelectPlaylistDialog
+import com.satya.musicplayer.helpers.FLAG_MANUAL_CACHE
+import com.satya.musicplayer.helpers.RoomHelper
+import com.satya.musicplayer.models.Track
 
 fun Activity.addTracksToPlaylist(tracks: List<Track>, callback: () -> Unit) {
     SelectPlaylistDialog(this) { playlistId ->
@@ -72,5 +72,5 @@ fun Activity.ensureActivityNotDestroyed(callback: () -> Unit) {
 
 fun Activity.shareFiles(tracks: List<Track>) {
     val paths = tracks.map { it.path }
-    sharePathsIntent(paths, com.simplemobiletools.musicplayer.BuildConfig.APPLICATION_ID)
+    sharePathsIntent(paths, com.satya.musicplayer.BuildConfig.APPLICATION_ID)
 }

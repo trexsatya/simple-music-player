@@ -11,11 +11,11 @@ import com.simplemobiletools.commons.dialogs.ColorPickerDialog
 import com.simplemobiletools.commons.dialogs.FeatureLockedDialog
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.IS_CUSTOMIZING_COLORS
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.databinding.WidgetConfigBinding
-import com.simplemobiletools.musicplayer.extensions.config
-import com.simplemobiletools.musicplayer.helpers.MyWidgetProvider
-import com.simplemobiletools.musicplayer.playback.PlaybackService
+import com.satya.musicplayer.R
+import com.satya.musicplayer.databinding.WidgetConfigBinding
+import com.satya.musicplayer.extensions.config
+import com.satya.musicplayer.helpers.MyWidgetProvider
+import com.satya.musicplayer.playback.PlaybackService
 
 class WidgetConfigureActivity : SimpleActivity() {
     private var mBgAlpha = 0f

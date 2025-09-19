@@ -10,20 +10,20 @@ import com.simplemobiletools.commons.extensions.beGoneIf
 import com.simplemobiletools.commons.extensions.beVisibleIf
 import com.simplemobiletools.commons.extensions.hideKeyboard
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.activities.AlbumsActivity
-import com.simplemobiletools.musicplayer.activities.SimpleActivity
-import com.simplemobiletools.musicplayer.adapters.ArtistsAdapter
-import com.simplemobiletools.musicplayer.databinding.FragmentArtistsBinding
-import com.simplemobiletools.musicplayer.dialogs.ChangeSortingDialog
-import com.simplemobiletools.musicplayer.extensions.audioHelper
-import com.simplemobiletools.musicplayer.extensions.config
-import com.simplemobiletools.musicplayer.extensions.mediaScanner
-import com.simplemobiletools.musicplayer.extensions.viewBinding
-import com.simplemobiletools.musicplayer.helpers.ARTIST
-import com.simplemobiletools.musicplayer.helpers.TAB_ARTISTS
-import com.simplemobiletools.musicplayer.models.Artist
-import com.simplemobiletools.musicplayer.models.sortSafely
+import com.satya.musicplayer.R
+import com.satya.musicplayer.activities.AlbumsActivity
+import com.satya.musicplayer.activities.SimpleActivity
+import com.satya.musicplayer.adapters.ArtistsAdapter
+import com.satya.musicplayer.databinding.FragmentArtistsBinding
+import com.satya.musicplayer.dialogs.ChangeSortingDialog
+import com.satya.musicplayer.extensions.audioHelper
+import com.satya.musicplayer.extensions.config
+import com.satya.musicplayer.extensions.mediaScanner
+import com.satya.musicplayer.extensions.viewBinding
+import com.satya.musicplayer.helpers.ARTIST
+import com.satya.musicplayer.helpers.TAB_ARTISTS
+import com.satya.musicplayer.models.Artist
+import com.satya.musicplayer.models.sortSafely
 
 // Artists -> Albums -> Tracks
 class ArtistsFragment(context: Context, attributeSet: AttributeSet) : MyViewPagerFragment(context, attributeSet) {

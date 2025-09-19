@@ -9,14 +9,14 @@ import com.simplemobiletools.commons.extensions.highlightTextPart
 import com.simplemobiletools.commons.extensions.setupViewBackground
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
 import com.simplemobiletools.commons.views.MyRecyclerView
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.databinding.ItemAlbumBinding
-import com.simplemobiletools.musicplayer.extensions.audioHelper
-import com.simplemobiletools.musicplayer.extensions.config
-import com.simplemobiletools.musicplayer.extensions.getAlbumCoverArt
-import com.simplemobiletools.musicplayer.inlines.indexOfFirstOrNull
-import com.simplemobiletools.musicplayer.models.Album
-import com.simplemobiletools.musicplayer.models.Track
+import com.satya.musicplayer.R
+import com.satya.musicplayer.databinding.ItemAlbumBinding
+import com.satya.musicplayer.extensions.audioHelper
+import com.satya.musicplayer.extensions.config
+import com.satya.musicplayer.extensions.getAlbumCoverArt
+import com.satya.musicplayer.inlines.indexOfFirstOrNull
+import com.satya.musicplayer.models.Album
+import com.satya.musicplayer.models.Track
 
 class AlbumsAdapter(activity: BaseSimpleActivity, items: ArrayList<Album>, recyclerView: MyRecyclerView, itemClick: (Any) -> Unit) :
     BaseMusicAdapter<Album>(items, activity, recyclerView, itemClick), RecyclerViewFastScroller.OnPopupTextUpdate {

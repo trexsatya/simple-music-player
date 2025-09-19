@@ -10,12 +10,12 @@ import com.simplemobiletools.commons.extensions.highlightTextPart
 import com.simplemobiletools.commons.extensions.setupViewBackground
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
 import com.simplemobiletools.commons.views.MyRecyclerView
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.databinding.ItemArtistBinding
-import com.simplemobiletools.musicplayer.extensions.*
-import com.simplemobiletools.musicplayer.inlines.indexOfFirstOrNull
-import com.simplemobiletools.musicplayer.models.Artist
-import com.simplemobiletools.musicplayer.models.Track
+import com.satya.musicplayer.R
+import com.satya.musicplayer.databinding.ItemArtistBinding
+import com.satya.musicplayer.extensions.*
+import com.satya.musicplayer.inlines.indexOfFirstOrNull
+import com.satya.musicplayer.models.Artist
+import com.satya.musicplayer.models.Track
 
 class ArtistsAdapter(activity: BaseSimpleActivity, items: ArrayList<Artist>, recyclerView: MyRecyclerView, itemClick: (Any) -> Unit) :
     BaseMusicAdapter<Artist>(items, activity, recyclerView, itemClick), RecyclerViewFastScroller.OnPopupTextUpdate {

@@ -10,11 +10,11 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.views.MySeekBar
 import com.simplemobiletools.commons.views.MyTextView
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.databinding.FragmentPlaybackSpeedBinding
-import com.simplemobiletools.musicplayer.extensions.config
-import com.simplemobiletools.musicplayer.helpers.Config
-import com.simplemobiletools.musicplayer.interfaces.PlaybackSpeedListener
+import com.satya.musicplayer.R
+import com.satya.musicplayer.databinding.FragmentPlaybackSpeedBinding
+import com.satya.musicplayer.extensions.config
+import com.satya.musicplayer.helpers.Config
+import com.satya.musicplayer.interfaces.PlaybackSpeedListener
 
 class PlaybackSpeedFragment : BottomSheetDialogFragment() {
     private val MIN_PLAYBACK_SPEED = 0.25f

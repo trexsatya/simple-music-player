@@ -4,9 +4,9 @@ import android.content.Context
 import android.util.AttributeSet
 import android.widget.RelativeLayout
 import com.simplemobiletools.commons.activities.BaseSimpleActivity
-import com.simplemobiletools.musicplayer.activities.SimpleActivity
-import com.simplemobiletools.musicplayer.activities.SimpleControllerActivity
-import com.simplemobiletools.musicplayer.models.Track
+import com.satya.musicplayer.activities.SimpleActivity
+import com.satya.musicplayer.activities.SimpleControllerActivity
+import com.satya.musicplayer.models.Track
 
 abstract class MyViewPagerFragment(context: Context, attributeSet: AttributeSet) : RelativeLayout(context, attributeSet) {
     abstract fun setupFragment(activity: BaseSimpleActivity)

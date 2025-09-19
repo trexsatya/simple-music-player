@@ -13,8 +13,8 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.simplemobiletools.commons.extensions.*
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.databinding.ViewCurrentTrackBarBinding
+import com.satya.musicplayer.R
+import com.satya.musicplayer.databinding.ViewCurrentTrackBarBinding
 import com.satya.musicplayer.extensions.*
 
 class CurrentTrackBar(context: Context, attributeSet: AttributeSet) : RelativeLayout(context, attributeSet) {

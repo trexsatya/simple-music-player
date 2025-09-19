@@ -7,9 +7,9 @@ import com.simplemobiletools.commons.extensions.setupDialogStuff
 import com.simplemobiletools.commons.extensions.viewBinding
 import com.simplemobiletools.commons.helpers.isQPlus
 import com.simplemobiletools.commons.views.MyAppCompatCheckbox
-import com.simplemobiletools.musicplayer.databinding.DialogManageVisibleTabsBinding
-import com.simplemobiletools.musicplayer.extensions.config
-import com.simplemobiletools.musicplayer.helpers.*
+import com.satya.musicplayer.databinding.DialogManageVisibleTabsBinding
+import com.satya.musicplayer.extensions.config
+import com.satya.musicplayer.helpers.*
 
 class ManageVisibleTabsDialog(val activity: BaseSimpleActivity, val callback: (result: Int) -> Unit) {
     private val binding by activity.viewBinding(DialogManageVisibleTabsBinding::inflate)

@@ -4,7 +4,7 @@ import com.simplemobiletools.commons.activities.BaseSimpleActivity
 import com.simplemobiletools.commons.extensions.showErrorToast
 import com.simplemobiletools.commons.extensions.toast
 import com.simplemobiletools.commons.extensions.writeLn
-import com.simplemobiletools.musicplayer.models.Track
+import com.satya.musicplayer.models.Track
 import java.io.OutputStream
 
 class M3uExporter(val activity: BaseSimpleActivity) {

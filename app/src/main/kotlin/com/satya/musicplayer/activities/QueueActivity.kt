@@ -14,13 +14,13 @@ import com.simplemobiletools.commons.extensions.getProperPrimaryColor
 import com.simplemobiletools.commons.extensions.viewBinding
 import com.simplemobiletools.commons.helpers.NavigationIcon
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.adapters.QueueAdapter
-import com.simplemobiletools.musicplayer.databinding.ActivityQueueBinding
-import com.simplemobiletools.musicplayer.dialogs.NewPlaylistDialog
-import com.simplemobiletools.musicplayer.extensions.*
-import com.simplemobiletools.musicplayer.helpers.RoomHelper
-import com.simplemobiletools.musicplayer.models.Track
+import com.satya.musicplayer.R
+import com.satya.musicplayer.adapters.QueueAdapter
+import com.satya.musicplayer.databinding.ActivityQueueBinding
+import com.satya.musicplayer.dialogs.NewPlaylistDialog
+import com.satya.musicplayer.extensions.*
+import com.satya.musicplayer.helpers.RoomHelper
+import com.satya.musicplayer.models.Track
 
 class QueueActivity : SimpleControllerActivity() {
     private var searchMenuItem: MenuItem? = null

@@ -15,13 +15,13 @@ import com.simplemobiletools.commons.interfaces.ItemMoveCallback
 import com.simplemobiletools.commons.interfaces.ItemTouchHelperContract
 import com.simplemobiletools.commons.interfaces.StartReorderDragListener
 import com.simplemobiletools.commons.views.MyRecyclerView
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.activities.SimpleActivity
-import com.simplemobiletools.musicplayer.databinding.ItemTrackQueueBinding
-import com.simplemobiletools.musicplayer.extensions.*
-import com.simplemobiletools.musicplayer.helpers.EXTRA_SHUFFLE_INDICES
-import com.simplemobiletools.musicplayer.models.Track
-import com.simplemobiletools.musicplayer.playback.CustomCommands
+import com.satya.musicplayer.R
+import com.satya.musicplayer.activities.SimpleActivity
+import com.satya.musicplayer.databinding.ItemTrackQueueBinding
+import com.satya.musicplayer.extensions.*
+import com.satya.musicplayer.helpers.EXTRA_SHUFFLE_INDICES
+import com.satya.musicplayer.models.Track
+import com.satya.musicplayer.playback.CustomCommands
 
 class QueueAdapter(activity: SimpleActivity, items: ArrayList<Track>, var currentTrack: Track? = null, recyclerView: MyRecyclerView, itemClick: (Any) -> Unit) :
     BaseMusicAdapter<Track>(items, activity, recyclerView, itemClick), ItemTouchHelperContract, RecyclerViewFastScroller.OnPopupTextUpdate {

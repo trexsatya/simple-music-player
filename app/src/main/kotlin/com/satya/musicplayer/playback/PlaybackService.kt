@@ -10,12 +10,12 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.*
 import com.simplemobiletools.commons.extensions.hasPermission
 import com.simplemobiletools.commons.extensions.showErrorToast
-import com.simplemobiletools.musicplayer.extensions.*
-import com.simplemobiletools.musicplayer.helpers.NotificationHelper
-import com.simplemobiletools.musicplayer.helpers.getPermissionToRequest
-import com.simplemobiletools.musicplayer.playback.library.MediaItemProvider
-import com.simplemobiletools.musicplayer.playback.player.SimpleMusicPlayer
-import com.simplemobiletools.musicplayer.playback.player.initializeSessionAndPlayer
+import com.satya.musicplayer.extensions.*
+import com.satya.musicplayer.helpers.NotificationHelper
+import com.satya.musicplayer.helpers.getPermissionToRequest
+import com.satya.musicplayer.playback.library.MediaItemProvider
+import com.satya.musicplayer.playback.player.SimpleMusicPlayer
+import com.satya.musicplayer.playback.player.initializeSessionAndPlayer
 import java.time.Instant
 import java.util.Timer
 

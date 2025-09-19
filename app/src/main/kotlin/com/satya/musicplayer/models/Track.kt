@@ -12,9 +12,9 @@ import com.simplemobiletools.commons.extensions.getFilenameFromPath
 import com.simplemobiletools.commons.extensions.getFormattedDuration
 import com.simplemobiletools.commons.helpers.AlphanumericComparator
 import com.simplemobiletools.commons.helpers.SORT_DESCENDING
-import com.simplemobiletools.musicplayer.extensions.sortSafely
-import com.simplemobiletools.musicplayer.extensions.toMediaItem
-import com.simplemobiletools.musicplayer.helpers.*
+import com.satya.musicplayer.extensions.sortSafely
+import com.satya.musicplayer.extensions.toMediaItem
+import com.satya.musicplayer.helpers.*
 import java.io.File
 import java.io.Serializable
 

@@ -11,20 +11,20 @@ import com.simplemobiletools.commons.extensions.getFormattedDuration
 import com.simplemobiletools.commons.extensions.setupViewBackground
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
 import com.simplemobiletools.commons.views.MyRecyclerView
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.activities.SimpleActivity
-import com.simplemobiletools.musicplayer.databinding.ItemAlbumBinding
-import com.simplemobiletools.musicplayer.databinding.ItemSectionBinding
-import com.simplemobiletools.musicplayer.databinding.ItemTrackBinding
-import com.simplemobiletools.musicplayer.dialogs.EditDialog
-import com.simplemobiletools.musicplayer.extensions.audioHelper
-import com.simplemobiletools.musicplayer.extensions.getAlbumCoverArt
-import com.simplemobiletools.musicplayer.extensions.getTrackCoverArt
-import com.simplemobiletools.musicplayer.inlines.indexOfFirstOrNull
-import com.simplemobiletools.musicplayer.models.Album
-import com.simplemobiletools.musicplayer.models.AlbumSection
-import com.simplemobiletools.musicplayer.models.ListItem
-import com.simplemobiletools.musicplayer.models.Track
+import com.satya.musicplayer.R
+import com.satya.musicplayer.activities.SimpleActivity
+import com.satya.musicplayer.databinding.ItemAlbumBinding
+import com.satya.musicplayer.databinding.ItemSectionBinding
+import com.satya.musicplayer.databinding.ItemTrackBinding
+import com.satya.musicplayer.dialogs.EditDialog
+import com.satya.musicplayer.extensions.audioHelper
+import com.satya.musicplayer.extensions.getAlbumCoverArt
+import com.satya.musicplayer.extensions.getTrackCoverArt
+import com.satya.musicplayer.inlines.indexOfFirstOrNull
+import com.satya.musicplayer.models.Album
+import com.satya.musicplayer.models.AlbumSection
+import com.satya.musicplayer.models.ListItem
+import com.satya.musicplayer.models.Track
 
 // we show both albums and individual tracks here
 class AlbumsTracksAdapter(

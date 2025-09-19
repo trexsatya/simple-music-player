@@ -13,16 +13,16 @@ import androidx.media3.common.MediaMetadata.MediaType
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession.MediaItemsWithStartPosition
 import com.google.common.util.concurrent.MoreExecutors
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.extensions.*
-import com.simplemobiletools.musicplayer.helpers.TAB_ALBUMS
-import com.simplemobiletools.musicplayer.helpers.TAB_ARTISTS
-import com.simplemobiletools.musicplayer.helpers.TAB_FOLDERS
-import com.simplemobiletools.musicplayer.helpers.TAB_GENRES
-import com.simplemobiletools.musicplayer.helpers.TAB_PLAYLISTS
-import com.simplemobiletools.musicplayer.helpers.TAB_TRACKS
-import com.simplemobiletools.musicplayer.models.QueueItem
-import com.simplemobiletools.musicplayer.models.toMediaItems
+import com.satya.musicplayer.R
+import com.satya.musicplayer.extensions.*
+import com.satya.musicplayer.helpers.TAB_ALBUMS
+import com.satya.musicplayer.helpers.TAB_ARTISTS
+import com.satya.musicplayer.helpers.TAB_FOLDERS
+import com.satya.musicplayer.helpers.TAB_GENRES
+import com.satya.musicplayer.helpers.TAB_PLAYLISTS
+import com.satya.musicplayer.helpers.TAB_TRACKS
+import com.satya.musicplayer.models.QueueItem
+import com.satya.musicplayer.models.toMediaItems
 import java.util.concurrent.Executors
 
 private const val STATE_CREATED = 1

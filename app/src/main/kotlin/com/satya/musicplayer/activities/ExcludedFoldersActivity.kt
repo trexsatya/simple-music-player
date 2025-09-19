@@ -6,9 +6,9 @@ import com.simplemobiletools.commons.extensions.getProperTextColor
 import com.simplemobiletools.commons.extensions.viewBinding
 import com.simplemobiletools.commons.helpers.NavigationIcon
 import com.simplemobiletools.commons.interfaces.RefreshRecyclerViewListener
-import com.simplemobiletools.musicplayer.adapters.ExcludedFoldersAdapter
-import com.simplemobiletools.musicplayer.databinding.ActivityExcludedFoldersBinding
-import com.simplemobiletools.musicplayer.extensions.config
+import com.satya.musicplayer.adapters.ExcludedFoldersAdapter
+import com.satya.musicplayer.databinding.ActivityExcludedFoldersBinding
+import com.satya.musicplayer.extensions.config
 
 class ExcludedFoldersActivity : SimpleActivity(), RefreshRecyclerViewListener {
 

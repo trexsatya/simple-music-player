@@ -5,7 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import com.simplemobiletools.commons.extensions.applyColorFilter
-import com.simplemobiletools.musicplayer.R
+import com.satya.musicplayer.R
 
 fun Resources.getSmallPlaceholder(color: Int): Drawable {
     val placeholder = getDrawable(R.drawable.ic_headset_padded)

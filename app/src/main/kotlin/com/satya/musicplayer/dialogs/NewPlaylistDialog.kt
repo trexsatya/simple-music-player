@@ -4,11 +4,11 @@ import android.app.Activity
 import androidx.appcompat.app.AlertDialog
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.databinding.DialogNewPlaylistBinding
-import com.simplemobiletools.musicplayer.extensions.audioHelper
-import com.simplemobiletools.musicplayer.extensions.getPlaylistIdWithTitle
-import com.simplemobiletools.musicplayer.models.Playlist
+import com.satya.musicplayer.R
+import com.satya.musicplayer.databinding.DialogNewPlaylistBinding
+import com.satya.musicplayer.extensions.audioHelper
+import com.satya.musicplayer.extensions.getPlaylistIdWithTitle
+import com.satya.musicplayer.models.Playlist
 
 class NewPlaylistDialog(val activity: Activity, var playlist: Playlist? = null, val callback: (playlistId: Int) -> Unit) {
     private var isNewPlaylist = playlist == null

@@ -5,13 +5,13 @@ import android.view.ViewGroup
 import androidx.viewpager.widget.PagerAdapter
 import com.simplemobiletools.commons.extensions.getProperPrimaryColor
 import com.simplemobiletools.commons.extensions.getProperTextColor
-import com.simplemobiletools.musicplayer.activities.SimpleActivity
-import com.simplemobiletools.musicplayer.databinding.*
-import com.simplemobiletools.musicplayer.extensions.getVisibleTabs
-import com.simplemobiletools.musicplayer.fragments.MyViewPagerFragment
-import com.simplemobiletools.musicplayer.fragments.PlaylistsFragment
-import com.simplemobiletools.musicplayer.fragments.TracksFragment
-import com.simplemobiletools.musicplayer.helpers.*
+import com.satya.musicplayer.activities.SimpleActivity
+import com.satya.musicplayer.databinding.*
+import com.satya.musicplayer.extensions.getVisibleTabs
+import com.satya.musicplayer.fragments.MyViewPagerFragment
+import com.satya.musicplayer.fragments.PlaylistsFragment
+import com.satya.musicplayer.fragments.TracksFragment
+import com.satya.musicplayer.helpers.*
 
 class ViewPagerAdapter(val activity: SimpleActivity) : PagerAdapter() {
     private val fragments = arrayListOf<MyViewPagerFragment>()

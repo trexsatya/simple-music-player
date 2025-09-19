@@ -8,10 +8,10 @@ import com.simplemobiletools.commons.extensions.getAlertDialogBuilder
 import com.simplemobiletools.commons.extensions.setupDialogStuff
 import com.simplemobiletools.commons.extensions.viewBinding
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
-import com.simplemobiletools.musicplayer.databinding.DialogSelectPlaylistBinding
-import com.simplemobiletools.musicplayer.databinding.ItemSelectPlaylistBinding
-import com.simplemobiletools.musicplayer.extensions.audioHelper
-import com.simplemobiletools.musicplayer.models.Playlist
+import com.satya.musicplayer.databinding.DialogSelectPlaylistBinding
+import com.satya.musicplayer.databinding.ItemSelectPlaylistBinding
+import com.satya.musicplayer.extensions.audioHelper
+import com.satya.musicplayer.models.Playlist
 
 class SelectPlaylistDialog(val activity: Activity, val callback: (playlistId: Int) -> Unit) {
     private var dialog: AlertDialog? = null

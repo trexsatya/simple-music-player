@@ -16,16 +16,16 @@ import com.simplemobiletools.commons.interfaces.ItemMoveCallback
 import com.simplemobiletools.commons.interfaces.ItemTouchHelperContract
 import com.simplemobiletools.commons.interfaces.StartReorderDragListener
 import com.simplemobiletools.commons.views.MyRecyclerView
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.databinding.ItemTrackBinding
-import com.simplemobiletools.musicplayer.dialogs.EditDialog
-import com.simplemobiletools.musicplayer.extensions.*
-import com.simplemobiletools.musicplayer.helpers.ALL_TRACKS_PLAYLIST_ID
-import com.simplemobiletools.musicplayer.helpers.PLAYER_SORT_BY_CUSTOM
-import com.simplemobiletools.musicplayer.inlines.indexOfFirstOrNull
-import com.simplemobiletools.musicplayer.models.Events
-import com.simplemobiletools.musicplayer.models.Playlist
-import com.simplemobiletools.musicplayer.models.Track
+import com.satya.musicplayer.R
+import com.satya.musicplayer.databinding.ItemTrackBinding
+import com.satya.musicplayer.dialogs.EditDialog
+import com.satya.musicplayer.extensions.*
+import com.satya.musicplayer.helpers.ALL_TRACKS_PLAYLIST_ID
+import com.satya.musicplayer.helpers.PLAYER_SORT_BY_CUSTOM
+import com.satya.musicplayer.inlines.indexOfFirstOrNull
+import com.satya.musicplayer.models.Events
+import com.satya.musicplayer.models.Playlist
+import com.satya.musicplayer.models.Track
 import org.greenrobot.eventbus.EventBus
 
 class TracksAdapter(

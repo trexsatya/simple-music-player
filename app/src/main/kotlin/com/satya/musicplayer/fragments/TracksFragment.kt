@@ -12,18 +12,18 @@ import com.simplemobiletools.commons.extensions.getParentPath
 import com.simplemobiletools.commons.extensions.hideKeyboard
 import com.simplemobiletools.commons.extensions.openNotificationSettings
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.activities.SimpleActivity
-import com.simplemobiletools.musicplayer.adapters.TracksAdapter
-import com.simplemobiletools.musicplayer.databinding.FragmentTracksBinding
-import com.simplemobiletools.musicplayer.dialogs.ChangeSortingDialog
-import com.simplemobiletools.musicplayer.extensions.audioHelper
-import com.simplemobiletools.musicplayer.extensions.config
-import com.simplemobiletools.musicplayer.extensions.mediaScanner
-import com.simplemobiletools.musicplayer.extensions.viewBinding
-import com.simplemobiletools.musicplayer.helpers.TAB_TRACKS
-import com.simplemobiletools.musicplayer.models.Track
-import com.simplemobiletools.musicplayer.models.sortSafely
+import com.satya.musicplayer.R
+import com.satya.musicplayer.activities.SimpleActivity
+import com.satya.musicplayer.adapters.TracksAdapter
+import com.satya.musicplayer.databinding.FragmentTracksBinding
+import com.satya.musicplayer.dialogs.ChangeSortingDialog
+import com.satya.musicplayer.extensions.audioHelper
+import com.satya.musicplayer.extensions.config
+import com.satya.musicplayer.extensions.mediaScanner
+import com.satya.musicplayer.extensions.viewBinding
+import com.satya.musicplayer.helpers.TAB_TRACKS
+import com.satya.musicplayer.models.Track
+import com.satya.musicplayer.models.sortSafely
 
 // Artists -> Albums -> Tracks
 class TracksFragment(context: Context, attributeSet: AttributeSet) : MyViewPagerFragment(context, attributeSet) {

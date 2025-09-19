@@ -9,15 +9,15 @@ import com.simplemobiletools.commons.extensions.highlightTextPart
 import com.simplemobiletools.commons.extensions.setupViewBackground
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
 import com.simplemobiletools.commons.views.MyRecyclerView
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.databinding.ItemPlaylistBinding
-import com.simplemobiletools.musicplayer.dialogs.NewPlaylistDialog
-import com.simplemobiletools.musicplayer.dialogs.RemovePlaylistDialog
-import com.simplemobiletools.musicplayer.extensions.audioHelper
-import com.simplemobiletools.musicplayer.extensions.config
-import com.simplemobiletools.musicplayer.inlines.indexOfFirstOrNull
-import com.simplemobiletools.musicplayer.models.Events
-import com.simplemobiletools.musicplayer.models.Playlist
+import com.satya.musicplayer.R
+import com.satya.musicplayer.databinding.ItemPlaylistBinding
+import com.satya.musicplayer.dialogs.NewPlaylistDialog
+import com.satya.musicplayer.dialogs.RemovePlaylistDialog
+import com.satya.musicplayer.extensions.audioHelper
+import com.satya.musicplayer.extensions.config
+import com.satya.musicplayer.inlines.indexOfFirstOrNull
+import com.satya.musicplayer.models.Events
+import com.satya.musicplayer.models.Playlist
 import org.greenrobot.eventbus.EventBus
 
 class PlaylistsAdapter(

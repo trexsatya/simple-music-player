@@ -4,10 +4,10 @@ import androidx.appcompat.app.AlertDialog
 import com.simplemobiletools.commons.dialogs.FilePickerDialog
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.activities.SimpleActivity
-import com.simplemobiletools.musicplayer.databinding.DialogExportPlaylistBinding
-import com.simplemobiletools.musicplayer.extensions.config
+import com.satya.musicplayer.R
+import com.satya.musicplayer.activities.SimpleActivity
+import com.satya.musicplayer.databinding.DialogExportPlaylistBinding
+import com.satya.musicplayer.extensions.config
 import java.io.File
 
 class ExportPlaylistDialog(

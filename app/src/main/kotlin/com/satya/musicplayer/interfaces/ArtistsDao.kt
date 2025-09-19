@@ -1,7 +1,7 @@
 package com.satya.musicplayer.interfaces
 
 import androidx.room.*
-import com.simplemobiletools.musicplayer.models.Artist
+import com.satya.musicplayer.models.Artist
 
 @Dao
 interface ArtistsDao {

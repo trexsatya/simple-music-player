@@ -54,4 +54,4 @@
         app:lottie_loop="false"
         app:lottie_rawRes="@raw/playpause" />
 
-</com.simplemobiletools.musicplayer.views.CurrentTrackBar>
+</com.satya.musicplayer.views.CurrentTrackBar>

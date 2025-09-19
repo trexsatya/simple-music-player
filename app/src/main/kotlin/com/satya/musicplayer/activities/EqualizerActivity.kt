@@ -12,8 +12,8 @@ import com.simplemobiletools.commons.helpers.DARK_GREY
 import com.simplemobiletools.commons.helpers.NavigationIcon
 import com.simplemobiletools.commons.models.RadioItem
 import com.simplemobiletools.commons.views.MySeekBar
-import com.simplemobiletools.musicplayer.databinding.ActivityEqualizerBinding
-import com.simplemobiletools.musicplayer.databinding.EqualizerBandBinding
+import com.satya.musicplayer.databinding.ActivityEqualizerBinding
+import com.satya.musicplayer.databinding.EqualizerBandBinding
 import com.satya.musicplayer.extensions.config
 import com.satya.musicplayer.helpers.EQUALIZER_PRESET_CUSTOM
 import com.satya.musicplayer.playback.SimpleEqualizer

@@ -18,19 +18,19 @@ import com.simplemobiletools.commons.helpers.*
 import com.simplemobiletools.commons.models.FAQItem
 import com.simplemobiletools.commons.models.RadioItem
 import com.simplemobiletools.commons.models.Release
-import com.simplemobiletools.musicplayer.BuildConfig
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.adapters.ViewPagerAdapter
-import com.simplemobiletools.musicplayer.databinding.ActivityMainBinding
-import com.simplemobiletools.musicplayer.dialogs.NewPlaylistDialog
-import com.simplemobiletools.musicplayer.dialogs.SelectPlaylistDialog
-import com.simplemobiletools.musicplayer.dialogs.SleepTimerCustomDialog
-import com.simplemobiletools.musicplayer.extensions.*
-import com.simplemobiletools.musicplayer.fragments.PlaylistsFragment
-import com.simplemobiletools.musicplayer.helpers.*
-import com.simplemobiletools.musicplayer.helpers.M3uImporter.ImportResult
-import com.simplemobiletools.musicplayer.models.Events
-import com.simplemobiletools.musicplayer.playback.CustomCommands
+import com.satya.musicplayer.BuildConfig
+import com.satya.musicplayer.R
+import com.satya.musicplayer.adapters.ViewPagerAdapter
+import com.satya.musicplayer.databinding.ActivityMainBinding
+import com.satya.musicplayer.dialogs.NewPlaylistDialog
+import com.satya.musicplayer.dialogs.SelectPlaylistDialog
+import com.satya.musicplayer.dialogs.SleepTimerCustomDialog
+import com.satya.musicplayer.extensions.*
+import com.satya.musicplayer.fragments.PlaylistsFragment
+import com.satya.musicplayer.helpers.*
+import com.satya.musicplayer.helpers.M3uImporter.ImportResult
+import com.satya.musicplayer.models.Events
+import com.satya.musicplayer.playback.CustomCommands
 import me.grantland.widget.AutofitHelper
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -50,7 +50,7 @@ class MainActivity : SimpleMusicActivity() {
         isMaterialActivity = true
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        appLaunched(com.simplemobiletools.musicplayer.BuildConfig.APPLICATION_ID)
+        appLaunched(com.satya.musicplayer.BuildConfig.APPLICATION_ID)
         setupOptionsMenu()
         refreshMenuItems()
         updateMaterialActivityViews(binding.mainCoordinator, binding.mainHolder, useTransparentNavigation = false, useTopSearchMenu = true)
@@ -212,7 +212,7 @@ class MainActivity : SimpleMusicActivity() {
     }
 
     private fun initFragments() {
-        binding.viewPager.adapter = com.simplemobiletools.musicplayer.adapters.ViewPagerAdapter(this)
+        binding.viewPager.adapter = com.satya.musicplayer.adapters.ViewPagerAdapter(this)
         binding.viewPager.offscreenPageLimit = tabsList.size - 1
         binding.viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) {}
@@ -475,7 +475,7 @@ class MainActivity : SimpleMusicActivity() {
         }
     }
 
-    private fun getAdapter() = binding.viewPager.adapter as? com.simplemobiletools.musicplayer.adapters.ViewPagerAdapter
+    private fun getAdapter() = binding.viewPager.adapter as? com.satya.musicplayer.adapters.ViewPagerAdapter
 
     private fun getAllFragments() = getAdapter()?.getAllFragments().orEmpty()
 
@@ -531,7 +531,7 @@ class MainActivity : SimpleMusicActivity() {
             faqItems.add(FAQItem(com.simplemobiletools.commons.R.string.faq_6_title_commons, com.simplemobiletools.commons.R.string.faq_6_text_commons))
         }
 
-        startAboutActivity(R.string.app_name, licenses, com.simplemobiletools.musicplayer.BuildConfig.VERSION_NAME, faqItems, true)
+        startAboutActivity(R.string.app_name, licenses, com.satya.musicplayer.BuildConfig.VERSION_NAME, faqItems, true)
     }
 
     private fun checkWhatsNewDialog() {
@@ -541,7 +541,7 @@ class MainActivity : SimpleMusicActivity() {
             add(Release(28, R.string.release_28))
             add(Release(37, R.string.release_37))
             add(Release(59, R.string.release_59))
-            checkWhatsNew(this, com.simplemobiletools.musicplayer.BuildConfig.VERSION_CODE)
+            checkWhatsNew(this, com.satya.musicplayer.BuildConfig.VERSION_CODE)
         }
     }
 }

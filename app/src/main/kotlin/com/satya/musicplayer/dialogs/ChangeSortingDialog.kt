@@ -9,12 +9,12 @@ import com.simplemobiletools.commons.extensions.setupDialogStuff
 import com.simplemobiletools.commons.extensions.viewBinding
 import com.simplemobiletools.commons.helpers.SORT_DESCENDING
 import com.simplemobiletools.commons.models.RadioItem
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.databinding.DialogChangeSortingBinding
-import com.simplemobiletools.musicplayer.databinding.SmallRadioButtonBinding
-import com.simplemobiletools.musicplayer.extensions.config
-import com.simplemobiletools.musicplayer.helpers.*
-import com.simplemobiletools.musicplayer.models.Playlist
+import com.satya.musicplayer.R
+import com.satya.musicplayer.databinding.DialogChangeSortingBinding
+import com.satya.musicplayer.databinding.SmallRadioButtonBinding
+import com.satya.musicplayer.extensions.config
+import com.satya.musicplayer.helpers.*
+import com.satya.musicplayer.models.Playlist
 
 class ChangeSortingDialog(val activity: Activity, val location: Int, val playlist: Playlist? = null, val path: String? = null, val callback: () -> Unit) {
     private val config = activity.config

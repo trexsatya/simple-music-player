@@ -12,15 +12,15 @@ import com.simplemobiletools.commons.extensions.getFormattedDuration
 import com.simplemobiletools.commons.extensions.setupViewBackground
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
 import com.simplemobiletools.commons.views.MyRecyclerView
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.activities.SimpleActivity
-import com.simplemobiletools.musicplayer.databinding.ItemAlbumHeaderBinding
-import com.simplemobiletools.musicplayer.databinding.ItemTrackBinding
-import com.simplemobiletools.musicplayer.dialogs.EditDialog
-import com.simplemobiletools.musicplayer.extensions.*
-import com.simplemobiletools.musicplayer.models.AlbumHeader
-import com.simplemobiletools.musicplayer.models.ListItem
-import com.simplemobiletools.musicplayer.models.Track
+import com.satya.musicplayer.R
+import com.satya.musicplayer.activities.SimpleActivity
+import com.satya.musicplayer.databinding.ItemAlbumHeaderBinding
+import com.satya.musicplayer.databinding.ItemTrackBinding
+import com.satya.musicplayer.dialogs.EditDialog
+import com.satya.musicplayer.extensions.*
+import com.satya.musicplayer.models.AlbumHeader
+import com.satya.musicplayer.models.ListItem
+import com.satya.musicplayer.models.Track
 
 class TracksHeaderAdapter(activity: SimpleActivity, items: ArrayList<ListItem>, recyclerView: MyRecyclerView, itemClick: (Any) -> Unit) :
     BaseMusicAdapter<ListItem>(items, activity, recyclerView, itemClick), RecyclerViewFastScroller.OnPopupTextUpdate {

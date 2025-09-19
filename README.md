@@ -50,7 +50,7 @@ Install Simple Music Player NOW❗️
 
 🎧 Enjoy the music with no Ads 🎧
 
-<a href="https://f-droid.org/packages/com.simplemobiletools.musicplayer">Get it on F-Droid</a>
+<a href="https://f-droid.org/packages/com.satya.musicplayer">Get it on F-Droid</a>
 
 Support us:  
 IBAN: SK4083300000002000965231  

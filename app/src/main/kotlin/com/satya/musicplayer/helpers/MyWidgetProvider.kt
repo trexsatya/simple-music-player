@@ -14,12 +14,12 @@ import androidx.media3.session.MediaController
 import com.simplemobiletools.commons.extensions.applyColorFilter
 import com.simplemobiletools.commons.extensions.getColoredBitmap
 import com.simplemobiletools.commons.extensions.getLaunchIntent
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.activities.SplashActivity
-import com.simplemobiletools.musicplayer.extensions.config
-import com.simplemobiletools.musicplayer.extensions.maybePreparePlayer
-import com.simplemobiletools.musicplayer.extensions.togglePlayback
-import com.simplemobiletools.musicplayer.playback.PlaybackService
+import com.satya.musicplayer.R
+import com.satya.musicplayer.activities.SplashActivity
+import com.satya.musicplayer.extensions.config
+import com.satya.musicplayer.extensions.maybePreparePlayer
+import com.satya.musicplayer.extensions.togglePlayback
+import com.satya.musicplayer.playback.PlaybackService
 
 class MyWidgetProvider : AppWidgetProvider() {
 

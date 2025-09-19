@@ -3,8 +3,8 @@ package com.satya.musicplayer.models
 import androidx.room.*
 import com.simplemobiletools.commons.helpers.AlphanumericComparator
 import com.simplemobiletools.commons.helpers.SORT_DESCENDING
-import com.simplemobiletools.musicplayer.extensions.sortSafely
-import com.simplemobiletools.musicplayer.helpers.PLAYER_SORT_BY_TITLE
+import com.satya.musicplayer.extensions.sortSafely
+import com.satya.musicplayer.helpers.PLAYER_SORT_BY_TITLE
 
 @Entity(tableName = "playlists", indices = [(Index(value = ["id"], unique = true))])
 data class Playlist(

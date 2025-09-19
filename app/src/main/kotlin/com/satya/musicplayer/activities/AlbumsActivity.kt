@@ -10,11 +10,11 @@ import com.simplemobiletools.commons.helpers.NavigationIcon
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
 import com.simplemobiletools.musicplayer.R
 import com.satya.musicplayer.adapters.AlbumsTracksAdapter
-import com.simplemobiletools.musicplayer.databinding.ActivityAlbumsBinding
 import com.satya.musicplayer.extensions.audioHelper
 import com.satya.musicplayer.helpers.ALBUM
 import com.satya.musicplayer.helpers.ARTIST
 import com.satya.musicplayer.models.*
+import com.satya.musicplayer.databinding.ActivityAlbumsBinding
 
 // Artists -> Albums -> Tracks
 class AlbumsActivity : SimpleMusicActivity() {

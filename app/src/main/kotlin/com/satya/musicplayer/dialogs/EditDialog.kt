@@ -5,11 +5,11 @@ import com.simplemobiletools.commons.activities.BaseSimpleActivity
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
 import com.simplemobiletools.commons.helpers.isRPlus
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.databinding.DialogRenameSongBinding
-import com.simplemobiletools.musicplayer.extensions.audioHelper
-import com.simplemobiletools.musicplayer.helpers.TagHelper
-import com.simplemobiletools.musicplayer.models.Track
+import com.satya.musicplayer.R
+import com.satya.musicplayer.databinding.DialogRenameSongBinding
+import com.satya.musicplayer.extensions.audioHelper
+import com.satya.musicplayer.helpers.TagHelper
+import com.satya.musicplayer.models.Track
 
 class EditDialog(val activity: BaseSimpleActivity, val track: Track, val callback: (track: Track) -> Unit) {
     private val tagHelper = TagHelper(activity)

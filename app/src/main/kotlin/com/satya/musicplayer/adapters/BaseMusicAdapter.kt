@@ -13,11 +13,11 @@ import com.simplemobiletools.commons.adapters.MyRecyclerViewAdapter
 import com.simplemobiletools.commons.extensions.getProperPrimaryColor
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
 import com.simplemobiletools.commons.views.MyRecyclerView
-import com.simplemobiletools.musicplayer.activities.SimpleControllerActivity
-import com.simplemobiletools.musicplayer.extensions.*
-import com.simplemobiletools.musicplayer.helpers.TagHelper
-import com.simplemobiletools.musicplayer.models.Track
-import com.simplemobiletools.musicplayer.playback.PlaybackService
+import com.satya.musicplayer.activities.SimpleControllerActivity
+import com.satya.musicplayer.extensions.*
+import com.satya.musicplayer.helpers.TagHelper
+import com.satya.musicplayer.models.Track
+import com.satya.musicplayer.playback.PlaybackService
 
 abstract class BaseMusicAdapter<Type>(
     var items: ArrayList<Type>,

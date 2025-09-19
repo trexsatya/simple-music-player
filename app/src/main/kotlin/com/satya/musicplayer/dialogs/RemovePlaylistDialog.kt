@@ -4,9 +4,9 @@ import android.app.Activity
 import com.simplemobiletools.commons.extensions.getAlertDialogBuilder
 import com.simplemobiletools.commons.extensions.setupDialogStuff
 import com.simplemobiletools.commons.extensions.viewBinding
-import com.simplemobiletools.musicplayer.R
-import com.simplemobiletools.musicplayer.databinding.DialogRemovePlaylistBinding
-import com.simplemobiletools.musicplayer.models.Playlist
+import com.satya.musicplayer.R
+import com.satya.musicplayer.databinding.DialogRemovePlaylistBinding
+import com.satya.musicplayer.models.Playlist
 
 class RemovePlaylistDialog(val activity: Activity, val playlist: Playlist? = null, val callback: (deleteFiles: Boolean) -> Unit) {
     private val binding by activity.viewBinding(DialogRemovePlaylistBinding::inflate)

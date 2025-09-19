@@ -1,9 +1,9 @@
 package com.satya.musicplayer.helpers
 
 import com.simplemobiletools.commons.extensions.showErrorToast
-import com.simplemobiletools.musicplayer.activities.SimpleActivity
-import com.simplemobiletools.musicplayer.extensions.audioHelper
-import com.simplemobiletools.musicplayer.models.Track
+import com.satya.musicplayer.activities.SimpleActivity
+import com.satya.musicplayer.extensions.audioHelper
+import com.satya.musicplayer.models.Track
 import net.bjoernpetersen.m3u.M3uParser
 import net.bjoernpetersen.m3u.model.M3uEntry
 import java.io.File

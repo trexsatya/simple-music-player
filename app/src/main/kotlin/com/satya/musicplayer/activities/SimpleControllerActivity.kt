@@ -10,14 +10,14 @@ import androidx.media3.session.MediaController
 import com.simplemobiletools.commons.extensions.toast
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
 import com.simplemobiletools.commons.helpers.isRPlus
-import com.simplemobiletools.musicplayer.extensions.*
-import com.simplemobiletools.musicplayer.helpers.EXTRA_NEXT_MEDIA_ID
-import com.simplemobiletools.musicplayer.helpers.SimpleMediaController
-import com.simplemobiletools.musicplayer.models.Events
-import com.simplemobiletools.musicplayer.models.Track
-import com.simplemobiletools.musicplayer.models.toMediaItems
-import com.simplemobiletools.musicplayer.playback.CustomCommands
-import com.simplemobiletools.musicplayer.playback.PlaybackService.Companion.updatePlaybackInfo
+import com.satya.musicplayer.extensions.*
+import com.satya.musicplayer.helpers.EXTRA_NEXT_MEDIA_ID
+import com.satya.musicplayer.helpers.SimpleMediaController
+import com.satya.musicplayer.models.Events
+import com.satya.musicplayer.models.Track
+import com.satya.musicplayer.models.toMediaItems
+import com.satya.musicplayer.playback.CustomCommands
+import com.satya.musicplayer.playback.PlaybackService.Companion.updatePlaybackInfo
 import org.greenrobot.eventbus.EventBus
 import java.io.File
 

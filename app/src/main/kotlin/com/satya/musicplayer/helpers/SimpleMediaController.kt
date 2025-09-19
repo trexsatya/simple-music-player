@@ -9,9 +9,9 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
-import com.simplemobiletools.musicplayer.extensions.getOrNull
-import com.simplemobiletools.musicplayer.extensions.runOnPlayerThread
-import com.simplemobiletools.musicplayer.playback.PlaybackService
+import com.satya.musicplayer.extensions.getOrNull
+import com.satya.musicplayer.extensions.runOnPlayerThread
+import com.satya.musicplayer.playback.PlaybackService
 import java.util.concurrent.Executors
 
 class SimpleMediaController(val context: Application) {

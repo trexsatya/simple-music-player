@@ -7,8 +7,8 @@ import androidx.media3.common.Player
 import com.simplemobiletools.commons.dialogs.PermissionRequiredDialog
 import com.simplemobiletools.commons.extensions.hideKeyboard
 import com.simplemobiletools.commons.extensions.openNotificationSettings
-import com.simplemobiletools.musicplayer.extensions.isReallyPlaying
-import com.simplemobiletools.musicplayer.views.CurrentTrackBar
+import com.satya.musicplayer.extensions.isReallyPlaying
+import com.satya.musicplayer.views.CurrentTrackBar
 
 /**
  * Base class for activities that want to control the player and display a [CurrentTrackBar] at the bottom.

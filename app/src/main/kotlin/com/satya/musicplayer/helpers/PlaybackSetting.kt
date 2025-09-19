@@ -2,7 +2,7 @@ package com.satya.musicplayer.helpers
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import com.simplemobiletools.musicplayer.R
+import com.satya.musicplayer.R
 
 enum class PlaybackSetting(
     @DrawableRes val iconRes: Int,
