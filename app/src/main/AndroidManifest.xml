@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.satya.musicplayer"
     xmlns:tools="http://schemas.android.com/tools"
     android:installLocation="auto">
 
@@ -51,6 +52,7 @@
             android:theme="@style/SplashTheme" />
 
         <activity
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
             android:name=".activities.MainActivity"
             android:configChanges="orientation"
             android:exported="true"

@@ -167,6 +167,7 @@ private fun createTrackFromBundle(bundle: Bundle): Track {
         year = bundle.getInt(EXTRA_YEAR),
         dateAdded = bundle.getInt(EXTRA_DATE_ADDED),
         orderInPlaylist = bundle.getInt(EXTRA_ORDER_IN_PLAYLIST),
-        flags = bundle.getInt(EXTRA_FLAGS)
+        flags = bundle.getInt(EXTRA_FLAGS),
+        playbackFile = bundle.getString(EXTRA_PLAYBACK_FILE) ?: ""
     )
 }

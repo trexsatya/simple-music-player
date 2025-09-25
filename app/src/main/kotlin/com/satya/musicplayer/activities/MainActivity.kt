@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.viewpager.widget.ViewPager
 import com.simplemobiletools.commons.databinding.BottomTablayoutItemBinding
@@ -58,6 +59,7 @@ class MainActivity : SimpleMusicActivity() {
         setupTabs()
         setupCurrentTrackBar(binding.currentTrackBar.root)
 
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         handlePermission(getPermissionToRequest()) {
             if (it) {
                 initActivity()

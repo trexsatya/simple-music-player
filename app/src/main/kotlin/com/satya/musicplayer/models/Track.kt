@@ -28,6 +28,7 @@ data class Track(
     @ColumnInfo(name = "duration") var duration: Int,
     @ColumnInfo(name = "album") var album: String,
     @ColumnInfo(name = "genre") var genre: String,
+    @ColumnInfo(name = "playback_file") var playbackFile: String,
     @ColumnInfo(name = "cover_art") val coverArt: String,
     @ColumnInfo(name = "playlist_id") var playListId: Int,
     @ColumnInfo(name = "track_id") val trackId: Int,  // order id within the tracks' album

@@ -1,11 +1,13 @@
 package com.satya.musicplayer.activities
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -22,20 +24,26 @@ import androidx.media3.common.MediaItem
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
-import com.simplemobiletools.commons.extensions.*
-import com.simplemobiletools.commons.helpers.MEDIUM_ALPHA
 import com.satya.musicplayer.R
 import com.satya.musicplayer.databinding.ActivityTrackBinding
 import com.satya.musicplayer.extensions.*
 import com.satya.musicplayer.fragments.PlaybackSpeedFragment
-import com.satya.musicplayer.helpers.*
+import com.satya.musicplayer.helpers.PlaybackSetting
+import com.satya.musicplayer.helpers.SEEK_INTERVAL_S
 import com.satya.musicplayer.interfaces.PlaybackSpeedListener
 import com.satya.musicplayer.models.Track
 import com.satya.musicplayer.playback.CustomCommands
 import com.satya.musicplayer.playback.PlaybackService
+import com.simplemobiletools.commons.extensions.*
+import com.simplemobiletools.commons.helpers.MEDIUM_ALPHA
+import com.simplemobiletools.commons.helpers.ensureBackgroundThread
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
 import java.text.DecimalFormat
 import kotlin.math.min
 import kotlin.time.Duration.Companion.milliseconds
+
 
 class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
     private val SWIPE_DOWN_THRESHOLD = 100
@@ -45,7 +53,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
 
     private val handler = Handler(Looper.getMainLooper())
     private val updateIntervalMillis = 500L
-
+    private val PICK_FILE_REQUEST_CODE: Int = 1
     private val binding by viewBinding(ActivityTrackBinding::inflate)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -161,6 +169,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         activityTrackProgressMax.setOnClickListener { seekForward() }
         activityTrackPlaybackSetting.setOnClickListener { togglePlaybackSetting() }
         activityTrackSpeedClickArea.setOnClickListener { showPlaybackSpeedPicker() }
+        activityTrackPlaybackControlFileBtn.setOnClickListener { openFilePicker() }
         setupShuffleButton()
         setupPlaybackSettingButton()
         setupSeekbar()
@@ -295,6 +304,59 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         withPlayer { seekForward() }
     }
 
+    fun openFilePicker() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.setType("*/*") // All file types
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        startActivityForResult(Intent.createChooser(intent, "Select File"), PICK_FILE_REQUEST_CODE)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: Intent?) {
+        super.onActivityResult(requestCode, resultCode, resultData)
+        if (requestCode == PICK_FILE_REQUEST_CODE && resultCode == RESULT_OK) {
+            resultData?.data?.path?.let {
+                val p = it
+                ensureBackgroundThread {
+                    try {
+                        setPlaybackControlTimestamps(this, p)
+                        val ah = this.audioHelper
+                        withPlayer {
+                            val id = this.currentMediaItem?.toTrack()?.id
+                            if(id != null) {
+                                ah.updatePlaybackControlFile(p, id)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        this.showErrorToast(e)
+                        val sample = """
+00:00:10 -> stop
+00:00:40 -> stop 30 (Sa Re Ga)
+"""
+                        PlaybackService.currentItemPlaybackTimestamps = parseTimestampCommands(sample)
+                    }
+                }
+            }
+        }
+    }
+
+    @Throws(IOException::class)
+    fun readTextFromUri(context: Context, uri: Uri?): String {
+        val sb = StringBuilder()
+        context.contentResolver.openInputStream(uri!!).use { inputStream ->
+            BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                var line: String?
+                while ((reader.readLine().also { line = it }) != null) {
+                    sb.append(line).append("\n")
+                }
+            }
+        }
+        return sb.toString()
+    }
+
+    private fun saveTrackPlaybackFileMapping() {
+
+    }
+
     private fun togglePlaybackSetting() {
         val newPlaybackSetting = config.playbackSetting.nextPlaybackOption
         config.playbackSetting = newPlaybackSetting
@@ -387,10 +449,70 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         }
     }
 
+    /**
+     * val text = """
+     *     12:00:01 -> stop
+     *     12:00:02
+     *     12:00:03 -> stop 5s
+     * """.trimIndent()
+     */
+    private fun parseTimestampCommands(input: String): List<Triple<Int, String, Boolean>> {
+        val result = mutableListOf<Triple<Int, String, Boolean>>()
+        input.lines().forEach { line ->
+            var cmd = ""
+            var tm: Int? = -1
+            val parts = line.split("->").map { it.trim() }
+            if (parts.size == 2) {
+                cmd = parts[1]
+                tm = parseTimestamp(parts[0])?.let { toMilliSeconds(it) }
+            } else if (parts.size == 1 && parts[0].isNotEmpty()) {
+                cmd = ""
+                tm = parseTimestamp(parts[0])?.let { toMilliSeconds(it) }
+            }
+            if(tm != null && tm > 0) result.add(Triple(tm, cmd, false))
+        }
+        return result
+    }
+
+
+    private fun toSeconds(time: Triple<Int, Int, Int>): Int {
+        return time.first*3600 + time.second*60 + time.third
+    }
+
+    private fun toMilliSeconds(time: Triple<Int, Int, Int>): Int {
+        return toSeconds(time) * 1000;
+    }
+
+    private fun parseTimestamp(timestamp: String): Triple<Int, Int, Int>? {
+        val parts = timestamp.trim().split(":")
+        if (parts.size != 3) return null
+        val (h, m, s) = parts
+        return try {
+            Triple(h.toInt(), m.toInt(), s.toInt())
+        } catch (e: NumberFormatException) {
+            null
+        }
+    }
+
     private fun updateTrackInfo() {
+        val ctx = this
         withPlayer {
             setupTrackInfo(currentMediaItem)
             setupNextTrackInfo(nextMediaItem)
+            PlaybackService.currentItemPlaybackTimestamps = listOf()
+            PlaybackService.processed.clear()
+            val playbackFile = currentMediaItem?.toTrack()?.playbackFile
+            ensureBackgroundThread {
+                if (!playbackFile.isNullOrEmpty()) setPlaybackControlTimestamps(ctx, playbackFile)
+            }
+        }
+    }
+
+    private fun setPlaybackControlTimestamps(ctx: TrackActivity, it: String?) {
+        if(it == null) return
+        val txt = readTextFromUri(ctx, Uri.parse(it))
+        if(txt.isNotEmpty()) {
+            PlaybackService.currentItemPlaybackTimestamps = parseTimestampCommands(txt.trimIndent())
         }
     }
 

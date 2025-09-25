@@ -45,6 +45,7 @@ abstract class SongsDatabase : RoomDatabase() {
                             .addMigrations(MIGRATION_10_11)
                             .addMigrations(MIGRATION_11_12)
                             .addMigrations(MIGRATION_12_13)
+                            .addMigrations(MIGRATION_13_14)
                             .build()
                     }
                 }
@@ -197,6 +198,14 @@ abstract class SongsDatabase : RoomDatabase() {
 
                     execSQL("CREATE TABLE `genres` (`id` INTEGER NOT NULL PRIMARY KEY, `title` TEXT NOT NULL, `track_cnt` INTEGER NOT NULL, `album_art` TEXT NOT NULL)")
                     execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_genres_id` ON `genres` (`id`)")
+                }
+            }
+        }
+
+        private val MIGRATION_13_14 = object : Migration(12, 13) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.apply {
+                    execSQL("ALTER TABLE tracks ADD COLUMN playback_file TEXT NOT NULL DEFAULT ''")
                 }
             }
         }

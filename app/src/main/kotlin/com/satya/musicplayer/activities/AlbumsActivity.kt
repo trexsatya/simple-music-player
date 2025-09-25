@@ -8,7 +8,7 @@ import com.simplemobiletools.commons.dialogs.PermissionRequiredDialog
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.NavigationIcon
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
-import com.simplemobiletools.musicplayer.R
+import com.satya.musicplayer.R
 import com.satya.musicplayer.adapters.AlbumsTracksAdapter
 import com.satya.musicplayer.extensions.audioHelper
 import com.satya.musicplayer.helpers.ALBUM

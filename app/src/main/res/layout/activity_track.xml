@@ -13,6 +13,16 @@
         android:layout_height="wrap_content"
         tools:ignore="HardcodedText">
 
+        <TextView
+            android:id="@+id/activity_track_playback_control_file_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:text="Playback File"
+            android:gravity="center_horizontal"
+            android:clickable="true"
+            app:layout_constraintTop_toBottomOf="@id/activity_track_image" />
+
         <ImageView
             android:id="@+id/activity_track_image"
             android:layout_width="match_parent"
@@ -59,7 +69,7 @@
             android:paddingBottom="@dimen/medium_margin"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/activity_track_image" />
+            app:layout_constraintTop_toBottomOf="@+id/track_playback_control_file_btn" />
 
         <ImageView
             android:id="@+id/activity_track_speed_icon"

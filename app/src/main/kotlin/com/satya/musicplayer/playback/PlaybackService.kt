@@ -14,6 +14,7 @@ import com.satya.musicplayer.extensions.*
 import com.satya.musicplayer.helpers.NotificationHelper
 import com.satya.musicplayer.helpers.getPermissionToRequest
 import com.satya.musicplayer.playback.library.MediaItemProvider
+import com.satya.musicplayer.playback.player.RESUME_AFTER_MS
 import com.satya.musicplayer.playback.player.SimpleMusicPlayer
 import com.satya.musicplayer.playback.player.initializeSessionAndPlayer
 import java.time.Instant
@@ -31,6 +32,7 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
     internal var  pollingInterval: Long = 300
     internal var  playersLastPosition = 0L
     internal var  lastPausedAt:Instant? = null
+    internal var sleepTime = RESUME_AFTER_MS
 
     internal var currentRoot = ""
 
@@ -108,6 +110,8 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
             private set
         var nextMediaItem: MediaItem? = null
             private set
+        var currentItemPlaybackTimestamps: List<Triple<Int, String, Boolean>> = listOf()
+        val processed = mutableSetOf<Triple<Int, String, Boolean>>()
 
         fun updatePlaybackInfo(player: Player) {
             currentMediaItem = player.currentMediaItem

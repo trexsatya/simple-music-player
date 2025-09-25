@@ -23,6 +23,7 @@ import com.satya.musicplayer.playback.PlaybackService.Companion.updatePlaybackIn
 import com.satya.musicplayer.playback.SimpleEqualizer
 import com.satya.musicplayer.playback.getCustomLayout
 import com.satya.musicplayer.playback.getMediaSessionCallback
+import com.simplemobiletools.commons.extensions.toInt
 import java.time.Duration
 import java.time.Instant
 import java.util.Timer
@@ -57,17 +58,29 @@ internal fun PlaybackService.initializeSessionAndPlayer(handleAudioFocus: Boolea
         SimpleEqualizer.setupEqualizer(this@initializeSessionAndPlayer, player)
     }
     timer = Timer()
+
     timer.schedule(object : TimerTask() {
         override fun run() {
             withPlayer {
+                var commandedToPause = false
+                if(PlaybackService.currentItemPlaybackTimestamps.isNotEmpty()) {
+                    val currentPosition = player.currentPosition
+                    val x = getMatching(PlaybackService.currentItemPlaybackTimestamps, { !PlaybackService.processed.contains(it) && it.first <= currentPosition }){ it == null || it.first > currentPosition}
+                    x?.second?.trim()?.startsWith("stop")?.let {
+                        commandedToPause = true
+                        sleepTime = extractFlexibleTimestamp(x.second)?.let { parseTimestamp(it) }?.let { toMilliSeconds(it) } ?: Int.MAX_VALUE
+                    }
+                    x?.let {  PlaybackService.processed.add(it) }
+                }
                 if(!player.isPlaying) {
-                    if(lastPausedAt != null && Duration.between(lastPausedAt, Instant.now()).abs().toMillis() >= RESUME_AFTER_MS) {
+                    if(lastPausedAt != null && Duration.between(lastPausedAt, Instant.now()).abs().toMillis() >= sleepTime) {
                         player.play()
+                        sleepTime = RESUME_AFTER_MS
                     }
                 } else if (player.duration > 0 && player.currentPosition >= player.duration) {
                     // Music Item finished
                     playersLastPosition = 0
-                } else if (player.currentPosition - playersLastPosition > PAUSE_AFTER_MS) {
+                } else if (commandedToPause || player.currentPosition - playersLastPosition > sleepTime) {
                     // Time to pause
                     player.pause()
                     playersLastPosition = player.currentPosition
@@ -81,6 +94,49 @@ internal fun PlaybackService.initializeSessionAndPlayer(handleAudioFocus: Boolea
     }, 0, pollingInterval)
 }
 
+private fun toMilliSeconds(time: Triple<Int, Int, Int>): Int {
+    return toSeconds(time) * 1000;
+}
+
+private fun toSeconds(time: Triple<Int, Int, Int>): Int {
+    return time.first*3600 + time.second*60 + time.third
+}
+
+fun extractFlexibleTimestamp(text: String): String? {
+    val regex = Regex("""\b\d{1,2}(?::\d{2}){0,2}\b""")
+    return regex.find(text)?.value
+}
+
+private fun parseTimestamp(timestamp: String): Triple<Int, Int, Int>? {
+    try {
+        val parts = timestamp.trim().split(":")
+        if(parts.size == 1) {
+            val (s) = parts
+            return Triple(0, 0, s.toInt())
+        }
+        if(parts.size == 2) {
+            val (m, s) = parts
+            return Triple(0, m.toInt(), s.toInt())
+        }
+        if(parts.size == 3) {
+            val (h, m, s) = parts
+            return Triple(h.toInt(), m.toInt(), s.toInt())
+        }
+        return null
+    } catch (e: NumberFormatException) {
+        return null
+    }
+}
+
+fun <T> getMatching(list: List<T>, predicate: (T) -> Boolean, predicateNext: (T?) -> Boolean): T? {
+    val idx = list.indexOfLast(predicate)
+    val lastLess = if (idx >= 0) list[idx] else null
+    val next = if (idx + 1 < list.size) list[idx + 1] else null
+    if(predicateNext.invoke(next)) {
+        return lastLess
+    }
+    return null
+}
 
 internal fun PlaybackService.rewind() {
     withPlayer {

@@ -44,6 +44,9 @@ interface SongsDao {
     @Query("UPDATE tracks SET path = :newPath, artist = :artist, title = :title WHERE path = :oldPath")
     fun updateSongInfo(newPath: String, artist: String, title: String, oldPath: String)
 
+    @Query("UPDATE tracks SET playback_file = :newPath WHERE id = :id")
+    fun updatePlaybackControlFile(newPath: String, id: Long)
+
     @Query("UPDATE tracks SET cover_art = :coverArt WHERE media_store_id = :id")
     fun updateCoverArt(coverArt: String, id: Long)
 

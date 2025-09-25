@@ -65,6 +65,10 @@ class AudioHelper(private val context: Context) {
         context.tracksDAO.removeTrack(mediaStoreId)
     }
 
+    fun updatePlaybackControlFile(path: String, id: Long) {
+        context.tracksDAO.updatePlaybackControlFile(path, id)
+    }
+
     fun deleteTracks(tracks: List<Track>) {
         tracks.forEach {
             deleteTrack(it.mediaStoreId)
