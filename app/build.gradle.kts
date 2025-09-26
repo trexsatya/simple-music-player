@@ -112,6 +112,7 @@ dependencies {
     implementation(libs.m3u.parser)
     implementation(libs.autofittextview)
     implementation(libs.jaudiotagger)
+    androidTestImplementation(libs.junit.junit)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     implementation(libs.bundles.room)

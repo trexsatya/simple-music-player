@@ -12,22 +12,26 @@ import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaLibraryService
+import com.satya.musicplayer.Utils.Companion.extractFlexibleTimestamp
+import com.satya.musicplayer.Utils.Companion.getMatching
+import com.satya.musicplayer.Utils.Companion.parseTimestamp
+import com.satya.musicplayer.Utils.Companion.toMilliSeconds
 import com.satya.musicplayer.activities.MainActivity
 import com.satya.musicplayer.extensions.broadcastUpdateWidgetState
 import com.satya.musicplayer.extensions.config
 import com.satya.musicplayer.extensions.currentMediaItems
 import com.satya.musicplayer.extensions.setRepeatMode
 import com.satya.musicplayer.helpers.SEEK_INTERVAL_MS
-import com.satya.musicplayer.playback.PlaybackService
+import com.satya.musicplayer.helpers.SimpleMediaController
+import com.satya.musicplayer.playback.*
 import com.satya.musicplayer.playback.PlaybackService.Companion.updatePlaybackInfo
-import com.satya.musicplayer.playback.SimpleEqualizer
 import com.satya.musicplayer.playback.getCustomLayout
 import com.satya.musicplayer.playback.getMediaSessionCallback
-import com.simplemobiletools.commons.extensions.toInt
 import java.time.Duration
 import java.time.Instant
 import java.util.Timer
 import java.util.TimerTask
+import kotlin.math.absoluteValue
 
 private const val PLAYER_THREAD = "PlayerThread"
 const val PAUSE_AFTER_MS = 30000
@@ -58,19 +62,23 @@ internal fun PlaybackService.initializeSessionAndPlayer(handleAudioFocus: Boolea
         SimpleEqualizer.setupEqualizer(this@initializeSessionAndPlayer, player)
     }
     timer = Timer()
-
+    val simpleMediaController = SimpleMediaController.getInstance(this)
     timer.schedule(object : TimerTask() {
         override fun run() {
             withPlayer {
                 var commandedToPause = false
-                if(PlaybackService.currentItemPlaybackTimestamps.isNotEmpty()) {
+                val enabled = GlobalData.playbackFileEnabled.value ?: false
+                if(enabled && PlaybackService.currentItemPlaybackTimestamps.isNotEmpty()) {
                     val currentPosition = player.currentPosition
-                    val x = getMatching(PlaybackService.currentItemPlaybackTimestamps, { !PlaybackService.processed.contains(it) && it.first <= currentPosition }){ it == null || it.first > currentPosition}
+                    val x = getMatching(PlaybackService.currentItemPlaybackTimestamps, { !PlaybackService.processedTimestamps.contains(it) && it.first <= currentPosition }){ it == null || it.first > currentPosition}
                     x?.second?.trim()?.startsWith("stop")?.let {
                         commandedToPause = true
                         sleepTime = extractFlexibleTimestamp(x.second)?.let { parseTimestamp(it) }?.let { toMilliSeconds(it) } ?: Int.MAX_VALUE
                     }
-                    x?.let {  PlaybackService.processed.add(it) }
+                    x?.let {  PlaybackService.processedTimestamps.add(it) }
+                    x?.second?.let { txt ->
+                        updatePlaybackContent(txt)
+                    }
                 }
                 if(!player.isPlaying) {
                     if(lastPausedAt != null && Duration.between(lastPausedAt, Instant.now()).abs().toMillis() >= sleepTime) {
@@ -80,68 +88,51 @@ internal fun PlaybackService.initializeSessionAndPlayer(handleAudioFocus: Boolea
                 } else if (player.duration > 0 && player.currentPosition >= player.duration) {
                     // Music Item finished
                     playersLastPosition = 0
-                } else if (commandedToPause || player.currentPosition - playersLastPosition > sleepTime) {
+                    PlaybackService.processedTimestamps.clear()
+                } else if (commandedToPause || (player.currentPosition - playersLastPosition).absoluteValue > sleepTime) {
                     // Time to pause
                     player.pause()
                     playersLastPosition = player.currentPosition
                     lastPausedAt = Instant.now()
                 } else if (player.currentPosition < playersLastPosition) {
                     // Re-winded
+                    PlaybackService.processedTimestamps.clear()
                     playersLastPosition = player.currentPosition
                 }
             }
         }
+
+        private fun updatePlaybackContent(txt: String) {
+            GlobalData.playbackFileContent.postValue(txt)
+        }
     }, 0, pollingInterval)
 }
 
-private fun toMilliSeconds(time: Triple<Int, Int, Int>): Int {
-    return toSeconds(time) * 1000;
-}
-
-private fun toSeconds(time: Triple<Int, Int, Int>): Int {
-    return time.first*3600 + time.second*60 + time.third
-}
-
-fun extractFlexibleTimestamp(text: String): String? {
-    val regex = Regex("""\b\d{1,2}(?::\d{2}){0,2}\b""")
-    return regex.find(text)?.value
-}
-
-private fun parseTimestamp(timestamp: String): Triple<Int, Int, Int>? {
-    try {
-        val parts = timestamp.trim().split(":")
-        if(parts.size == 1) {
-            val (s) = parts
-            return Triple(0, 0, s.toInt())
-        }
-        if(parts.size == 2) {
-            val (m, s) = parts
-            return Triple(0, m.toInt(), s.toInt())
-        }
-        if(parts.size == 3) {
-            val (h, m, s) = parts
-            return Triple(h.toInt(), m.toInt(), s.toInt())
-        }
-        return null
-    } catch (e: NumberFormatException) {
-        return null
-    }
-}
-
-fun <T> getMatching(list: List<T>, predicate: (T) -> Boolean, predicateNext: (T?) -> Boolean): T? {
-    val idx = list.indexOfLast(predicate)
-    val lastLess = if (idx >= 0) list[idx] else null
-    val next = if (idx + 1 < list.size) list[idx + 1] else null
-    if(predicateNext.invoke(next)) {
-        return lastLess
-    }
-    return null
-}
 
 internal fun PlaybackService.rewind() {
     withPlayer {
             player.seekTo(player.currentPosition - PAUSE_AFTER_MS)
     }
+}
+
+
+internal fun PlaybackService.mediaNextButtonClicked() {
+    val enabled = GlobalData.playbackFileEnabled.value ?: false
+    if(enabled && PlaybackService.currentItemPlaybackTimestamps.isNotEmpty()) {
+        val random = PlaybackService.currentItemPlaybackTimestamps.filter { it.second.trim().startsWith("stop") }.randomOrNull()
+        if(random == null) {
+            player.seekTo(0)
+        } else {
+            PlaybackService.processedTimestamps.add(random)
+            player.seekTo(random.first.toLong())
+        }
+    } else {
+        rewind()
+    }
+}
+
+internal fun PlaybackService.mediaPreviousButtonClicked() {
+    mediaNextButtonClicked()
 }
 
 private fun PlaybackService.initializePlayer(handleAudioFocus: Boolean, handleAudioBecomingNoisy: Boolean, skipSilence: Boolean): SimpleMusicPlayer {

@@ -13,7 +13,7 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
-
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission
         android:name="android.permission.USE_FINGERPRINT"
         tools:node="remove" />
@@ -125,10 +125,10 @@
 
         <activity
             android:name=".activities.TrackActivity"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
             android:configChanges="orientation"
             android:exported="true"
-            android:parentActivityName=".activities.MainActivity"
-            android:theme="@style/TranslucentTheme">
+            android:parentActivityName=".activities.MainActivity">
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

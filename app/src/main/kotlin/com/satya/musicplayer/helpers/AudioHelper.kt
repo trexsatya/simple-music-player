@@ -1,6 +1,7 @@
 package com.satya.musicplayer.helpers
 
 import android.content.Context
+import android.util.Log
 import com.simplemobiletools.commons.extensions.addBit
 import com.simplemobiletools.commons.extensions.getParentPath
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
@@ -65,8 +66,19 @@ class AudioHelper(private val context: Context) {
         context.tracksDAO.removeTrack(mediaStoreId)
     }
 
-    fun updatePlaybackControlFile(path: String, id: Long) {
-        context.tracksDAO.updatePlaybackControlFile(path, id)
+    fun updatePlaybackControlFile(fileContent: String, id: Long) {
+        ensureBackgroundThread {
+            context.tracksDAO.updatePlaybackControlFile(fileContent, id)
+        }
+    }
+
+    fun getPlaybackControlFile(id: Long, callback: (String) -> Unit) {
+        ensureBackgroundThread {
+            val playbackControlFile = context.tracksDAO.getPlaybackControlFile(id)
+            if(playbackControlFile != null) {
+                callback.invoke(playbackControlFile)
+            }
+        }
     }
 
     fun deleteTracks(tracks: List<Track>) {

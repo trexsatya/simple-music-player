@@ -13,25 +13,62 @@
         android:layout_height="wrap_content"
         tools:ignore="HardcodedText">
 
-        <TextView
-            android:id="@+id/activity_track_playback_control_file_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:focusable="true"
-            android:text="Playback File"
-            android:gravity="center_horizontal"
-            android:clickable="true"
-            app:layout_constraintTop_toBottomOf="@id/activity_track_image" />
-
         <ImageView
             android:id="@+id/activity_track_image"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/top_art_height"
+            android:layout_height="80dp"
             android:adjustViewBounds="true"
             android:contentDescription="@string/album"
             android:src="@drawable/ic_headset"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/playback_file_cntnr"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/activity_track_image"
+            >
+            <TextView
+                android:id="@+id/activity_track_playback_control_file_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:focusable="true"
+                android:text="Playback File"
+                android:gravity="center_horizontal"
+                android:clickable="true"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                />
+
+            <ToggleButton
+                android:id="@+id/activity_playback_file_enable_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textOn="PF ON"
+                android:textOff="PF OFF"
+                android:checked="true"
+                app:layout_constraintTop_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/activity_track_playback_control_file_btn"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TextView
+            android:id="@+id/activity_playback_control_file_content"
+            android:layout_width="wrap_content"
+            android:layout_height="500dp"
+            android:scrollbars="vertical"
+            android:focusable="true"
+            android:text="..."
+            android:gravity="center_horizontal"
+            android:clickable="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/playback_file_cntnr" />
 
         <ImageView
             android:id="@+id/activity_track_top_shadow"
@@ -69,7 +106,7 @@
             android:paddingBottom="@dimen/medium_margin"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/track_playback_control_file_btn" />
+            app:layout_constraintTop_toBottomOf="@+id/activity_track_playback_control_file_btn" />
 
         <ImageView
             android:id="@+id/activity_track_speed_icon"
@@ -135,7 +172,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/activity_track_progress_current"
-            tools:text="Track title" />
+            tools:text="Title" />
 
         <com.satya.musicplayer.views.MarqueeTextView
             android:id="@+id/activity_track_artist"
@@ -153,7 +190,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/activity_track_title"
-            tools:text="Track artist" />
+            tools:text="Artist" />
 
         <ImageView
             android:id="@+id/activity_track_toggle_shuffle"

@@ -111,7 +111,7 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
         var nextMediaItem: MediaItem? = null
             private set
         var currentItemPlaybackTimestamps: List<Triple<Int, String, Boolean>> = listOf()
-        val processed = mutableSetOf<Triple<Int, String, Boolean>>()
+        val processedTimestamps = mutableSetOf<Triple<Int, String, Boolean>>()
 
         fun updatePlaybackInfo(player: Player) {
             currentMediaItem = player.currentMediaItem

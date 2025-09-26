@@ -9,6 +9,7 @@ import androidx.media3.exoplayer.source.ShuffleOrder.DefaultShuffleOrder
 import com.satya.musicplayer.extensions.*
 import com.satya.musicplayer.inlines.indexOfFirstOrNull
 import kotlinx.coroutines.*
+import java.util.concurrent.Callable
 
 private const val DEFAULT_SHUFFLE_ORDER_SEED = 42L
 

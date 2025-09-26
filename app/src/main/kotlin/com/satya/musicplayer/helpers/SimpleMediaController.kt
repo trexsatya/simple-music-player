@@ -18,7 +18,7 @@ class SimpleMediaController(val context: Application) {
     private val executorService by lazy {
         MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor())
     }
-
+    private var timestampListener: (String) -> Unit = {}
     private lateinit var controllerFuture: ListenableFuture<MediaController>
     private var controller: MediaController? = null
 

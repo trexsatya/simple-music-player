@@ -21,6 +21,8 @@ import com.satya.musicplayer.extensions.addRemainingMediaItems
 import com.satya.musicplayer.extensions.config
 import com.satya.musicplayer.helpers.EXTRA_NEXT_MEDIA_ID
 import com.satya.musicplayer.helpers.EXTRA_SHUFFLE_INDICES
+import com.satya.musicplayer.playback.player.mediaNextButtonClicked
+import com.satya.musicplayer.playback.player.mediaPreviousButtonClicked
 import com.satya.musicplayer.playback.player.rewind
 import com.satya.musicplayer.playback.player.updatePlaybackState
 import java.time.Duration
@@ -61,12 +63,12 @@ internal fun PlaybackService.getMediaSessionCallback() = object : MediaLibrarySe
             }
 
             KEYCODE_MEDIA_NEXT -> {
-                rewind()
+                mediaNextButtonClicked()
                 return true
             }
 
             KEYCODE_MEDIA_PREVIOUS -> {
-                rewind()
+                mediaPreviousButtonClicked()
                 return true
             }
         }
