@@ -21,6 +21,7 @@ import com.satya.musicplayer.extensions.addRemainingMediaItems
 import com.satya.musicplayer.extensions.config
 import com.satya.musicplayer.helpers.EXTRA_NEXT_MEDIA_ID
 import com.satya.musicplayer.helpers.EXTRA_SHUFFLE_INDICES
+import com.satya.musicplayer.playback.player.*
 import com.satya.musicplayer.playback.player.mediaNextButtonClicked
 import com.satya.musicplayer.playback.player.mediaPreviousButtonClicked
 import com.satya.musicplayer.playback.player.rewind
@@ -135,6 +136,8 @@ internal fun PlaybackService.getMediaSessionCallback() = object : MediaLibrarySe
             CustomCommands.TOGGLE_SKIP_SILENCE -> player.setSkipSilence(config.gaplessPlayback)
             CustomCommands.SET_SHUFFLE_ORDER -> setShuffleOrder(args)
             CustomCommands.SET_NEXT_ITEM -> Unit
+            CustomCommands.SEEK_RANDOM -> seekRandom()
+            CustomCommands.REPLAY_LAST_RANDOM -> replayLastRandom()
         }
 
         return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))

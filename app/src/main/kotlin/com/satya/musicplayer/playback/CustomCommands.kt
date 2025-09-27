@@ -15,7 +15,10 @@ enum class CustomCommands(val customAction: String) {
     TOGGLE_SLEEP_TIMER(customAction = PATH + "TOGGLE_SLEEP_TIMER"),
     TOGGLE_SKIP_SILENCE(customAction = PATH + "TOGGLE_SKIP_SILENCE"),
     SET_NEXT_ITEM(customAction = PATH + "SET_NEXT_ITEM"),
-    SET_SHUFFLE_ORDER(customAction = PATH + "SET_SHUFFLE_ORDER");
+    SET_SHUFFLE_ORDER(customAction = PATH + "SET_SHUFFLE_ORDER"),
+    SEEK_RANDOM(customAction = PATH + "SEEK_RANDOM"),
+    REPLAY_LAST_RANDOM(customAction = PATH + "REPLAY_RANDOM")
+    ;
 
     val sessionCommand = SessionCommand(customAction, Bundle.EMPTY)
 

@@ -1,8 +1,10 @@
 package com.satya.musicplayer.activities
 
 import android.annotation.SuppressLint
+import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
@@ -11,6 +13,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import android.util.Log
 import android.util.Size
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -18,18 +21,25 @@ import android.view.View
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.os.bundleOf
 import androidx.core.os.postDelayed
 import androidx.core.view.GestureDetectorCompat
 import androidx.media3.common.MediaItem
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionToken
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.MoreExecutors
 import com.satya.musicplayer.R
 import com.satya.musicplayer.Utils.Companion.parseTimestampCommands
 import com.satya.musicplayer.Utils.Companion.readTextFromUri
 import com.satya.musicplayer.databinding.ActivityTrackBinding
 import com.satya.musicplayer.extensions.*
 import com.satya.musicplayer.fragments.PlaybackSpeedFragment
+import com.satya.musicplayer.helpers.EXTRA_SHUFFLE_INDICES
 import com.satya.musicplayer.helpers.PlaybackSetting
 import com.satya.musicplayer.helpers.SEEK_INTERVAL_S
 import com.satya.musicplayer.interfaces.PlaybackSpeedListener
@@ -55,6 +65,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
     private val updateIntervalMillis = 500L
     private val PICK_FILE_REQUEST_CODE: Int = 1
     private val binding by viewBinding(ActivityTrackBinding::inflate)
+    private var turn = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         showTransparentTop = true
@@ -92,9 +103,17 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
             }
         }
 
-        GlobalData.playbackFileContent.observe(this) {
+        GlobalData.playbackFileContent.observe(this) { text ->
             runOnUiThread {
-                findViewById<TextView>(R.id.activity_playback_control_file_content).text = it
+                turn = (turn + 1) % 2
+                findViewById<TextView>(R.id.activity_playback_control_file_content).also {
+                    it.text = text
+                    if(turn == 0) {
+                        it.setTextColor(Color.YELLOW)
+                    } else {
+                        it.setTextColor(Color.GREEN)
+                    }
+                }
             }
         }
         GlobalData.playbackFileName.observe(this) {
@@ -105,6 +124,22 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
 
         binding.activityPlaybackFileEnableBtn.setOnCheckedChangeListener { _, checked ->
             GlobalData.playbackFileEnabled.postValue(checked)
+        }
+    }
+
+    fun getContrastingTextColor(backgroundColor: Int): Int {
+        val r = Color.red(backgroundColor)
+        val g = Color.green(backgroundColor)
+        val b = Color.blue(backgroundColor)
+
+        // Calculate perceived brightness
+        val brightness = (0.299 * r + 0.587 * g + 0.114 * b)
+
+        return when {
+            brightness > 200 -> Color.parseColor("#212121") // Dark gray for very light backgrounds
+            brightness > 150 -> Color.parseColor("#424242") // Medium gray for light backgrounds
+            brightness > 100 -> Color.parseColor("#BDBDBD") // Light gray for medium backgrounds
+            else -> Color.parseColor("#FFFFFF")             // White for dark backgrounds
         }
     }
 
@@ -183,8 +218,22 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         activityTrackToggleShuffle.setOnClickListener { withPlayer { toggleShuffle() } }
         activityTrackPrevious.setOnClickListener { withPlayer { forceSeekToPrevious() } }
         activityTrackPlayPause.setOnClickListener { togglePlayback() }
-        activityTrackNext.setOnClickListener {
-            withPlayer { forceSeekToNext() }
+        activityTrackNext.setOnClickListener { withPlayer { forceSeekToNext() } }
+        activityTrackRandomSeek.setOnClickListener {
+            withPlayer {
+                sendCommand(
+                    command = CustomCommands.SEEK_RANDOM,
+                    extras = bundleOf("NOT_REQUIRED" to "_")
+                )
+            }
+        }
+        activityTrackReplayRandom.setOnClickListener {
+            withPlayer {
+                sendCommand(
+                    command = CustomCommands.REPLAY_LAST_RANDOM,
+                    extras = bundleOf("NOT_REQUIRED" to "_")
+                )
+            }
         }
         activityTrackProgressCurrent.setOnClickListener { seekBack() }
         activityTrackProgressMax.setOnClickListener { seekForward() }

@@ -33,6 +33,7 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
     internal var  playersLastPosition = 0L
     internal var  lastPausedAt:Instant? = null
     internal var sleepTime = RESUME_AFTER_MS
+    internal var lastRandomTimestamp: Triple<Int, String, Boolean>? = null
 
     internal var currentRoot = ""
 

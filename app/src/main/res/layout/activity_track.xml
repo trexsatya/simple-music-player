@@ -5,6 +5,7 @@
     android:id="@+id/activity_track_Scrollview"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:keepScreenOn="true"
     android:fillViewport="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -119,6 +120,25 @@
             app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/activity_track_progressbar" />
+
+        <Button
+            android:id="@+id/activity_track_replay_random"
+            android:text="RPL"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/activity_track_artist"
+            app:layout_constraintRight_toLeftOf="@id/activity_track_artist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+        </Button>
+        <Button
+            android:id="@+id/activity_track_random_seek"
+            android:text="RND"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintLeft_toRightOf="@id/activity_track_artist"
+            app:layout_constraintTop_toTopOf="@id/activity_track_artist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+        </Button>
 
         <com.simplemobiletools.commons.views.MyTextView
             android:id="@+id/activity_track_speed"

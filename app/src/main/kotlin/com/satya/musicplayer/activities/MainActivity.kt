@@ -59,7 +59,6 @@ class MainActivity : SimpleMusicActivity() {
         setupTabs()
         setupCurrentTrackBar(binding.currentTrackBar.root)
 
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         handlePermission(getPermissionToRequest()) {
             if (it) {
                 initActivity()

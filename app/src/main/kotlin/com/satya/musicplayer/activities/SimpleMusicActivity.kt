@@ -1,6 +1,11 @@
 package com.satya.musicplayer.activities
 
 import android.content.Intent
+import android.os.Build
+import android.view.View
+import android.view.WindowInsets
+import android.view.WindowInsetsController
+import android.view.WindowManager
 import androidx.annotation.CallSuper
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -19,6 +24,8 @@ abstract class SimpleMusicActivity : SimpleControllerActivity(), Player.Listener
     override fun onResume() {
         super.onResume()
         updateCurrentTrackBar()
+        enableFullscreen()
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     fun setupCurrentTrackBar(trackBar: CurrentTrackBar) {
@@ -63,5 +70,27 @@ abstract class SimpleMusicActivity : SimpleControllerActivity(), Player.Listener
     @CallSuper
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         trackBarView?.updateTrackState(isPlaying)
+    }
+
+    @Suppress("DEPRECATION")
+    private fun enableFullscreen() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Android 11 and above
+            window.setDecorFitsSystemWindows(false)
+            window.insetsController?.let { controller ->
+                controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                controller.systemBarsBehavior =
+                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            // Older devices
+            window.decorView.systemUiVisibility =
+                (View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
+        }
     }
 }

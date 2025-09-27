@@ -22,7 +22,6 @@ import com.satya.musicplayer.extensions.config
 import com.satya.musicplayer.extensions.currentMediaItems
 import com.satya.musicplayer.extensions.setRepeatMode
 import com.satya.musicplayer.helpers.SEEK_INTERVAL_MS
-import com.satya.musicplayer.helpers.SimpleMediaController
 import com.satya.musicplayer.playback.*
 import com.satya.musicplayer.playback.PlaybackService.Companion.updatePlaybackInfo
 import com.satya.musicplayer.playback.getCustomLayout
@@ -62,7 +61,6 @@ internal fun PlaybackService.initializeSessionAndPlayer(handleAudioFocus: Boolea
         SimpleEqualizer.setupEqualizer(this@initializeSessionAndPlayer, player)
     }
     timer = Timer()
-    val simpleMediaController = SimpleMediaController.getInstance(this)
     timer.schedule(object : TimerTask() {
         override fun run() {
             withPlayer {
@@ -101,10 +99,6 @@ internal fun PlaybackService.initializeSessionAndPlayer(handleAudioFocus: Boolea
                 }
             }
         }
-
-        private fun updatePlaybackContent(txt: String) {
-            GlobalData.playbackFileContent.postValue(txt)
-        }
     }, 0, pollingInterval)
 }
 
@@ -115,20 +109,43 @@ internal fun PlaybackService.rewind() {
     }
 }
 
+private fun updatePlaybackContent(txt: String) {
+    GlobalData.playbackFileContent.postValue(txt)
+}
 
 internal fun PlaybackService.mediaNextButtonClicked() {
     val enabled = GlobalData.playbackFileEnabled.value ?: false
-    if(enabled && PlaybackService.currentItemPlaybackTimestamps.isNotEmpty()) {
-        val random = PlaybackService.currentItemPlaybackTimestamps.filter { it.second.trim().startsWith("stop") }.randomOrNull()
-        if(random == null) {
-            player.seekTo(0)
-        } else {
-            PlaybackService.processedTimestamps.add(random)
-            player.seekTo(random.first.toLong())
-        }
+    if(enabled) {
+        seekRandom()
     } else {
         rewind()
     }
+}
+
+internal fun PlaybackService.replayLastRandom() {
+    lastRandomTimestamp?.let { playRandomTimestamp(it) }
+}
+
+internal fun PlaybackService.seekRandom() {
+    lastPausedAt = Instant.now()
+    if(PlaybackService.currentItemPlaybackTimestamps.isEmpty()) {
+        player.seekTo((0..player.duration / 1000).random()*1000)
+        return
+    }
+    val random = PlaybackService.currentItemPlaybackTimestamps.filter { it.second.trim().startsWith("stop") }.randomOrNull()
+    if (random == null) {
+        player.seekTo(0)
+    } else {
+        playRandomTimestamp(random)
+        lastRandomTimestamp = random
+    }
+    player.play()
+}
+
+private fun PlaybackService.playRandomTimestamp(random: Triple<Int, String, Boolean>) {
+    PlaybackService.processedTimestamps.add(random)
+    player.seekTo(random.first.toLong())
+    updatePlaybackContent(random.second)
 }
 
 internal fun PlaybackService.mediaPreviousButtonClicked() {
