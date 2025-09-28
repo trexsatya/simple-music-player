@@ -32,7 +32,7 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
     internal lateinit var mediaItemProvider: MediaItemProvider
 
     internal var lastRandomPlaybackCommand: IndexedValue<PlaybackCommand>? = null
-    var lastDefaultStopMs: Long = 0L
+    internal var lastRandomPosition: Long? = null
     val defaultStopIntervalMs = 10_000L
     internal var currentRoot = ""
 

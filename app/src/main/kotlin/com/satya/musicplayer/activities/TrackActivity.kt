@@ -1,7 +1,9 @@
 package com.satya.musicplayer.activities
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
@@ -60,6 +62,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
     private val PICK_FILE_REQUEST_CODE: Int = 1
     private val binding by viewBinding(ActivityTrackBinding::inflate)
     private var evenTurn = true
+    private var sharedPreferences: SharedPreferences? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         showTransparentTop = true
@@ -68,7 +71,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         nextTrackPlaceholder = resources.getColoredDrawableWithColor(R.drawable.ic_headset, getProperTextColor())
         setupButtons()
         setupFlingListener()
-
+        sharedPreferences = getSharedPreferences("com.satya.musicplayer", Context.MODE_PRIVATE)
         binding.apply {
             (activityTrackAppbar.layoutParams as ConstraintLayout.LayoutParams).topMargin = statusBarHeight
             activityTrackHolder.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
@@ -102,7 +105,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
                 evenTurn = !evenTurn
                 findViewById<TextView>(R.id.activity_playback_control_file_content).also {
                     it.text = text
-                    if(evenTurn) {
+                    if (evenTurn) {
                         it.setTextColor(Color.YELLOW)
                     } else {
                         it.setTextColor(Color.GREEN)
@@ -115,12 +118,14 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
                 findViewById<TextView>(R.id.activity_track_playback_control_file_btn).text = it
             }
         }
-
+        GlobalData.playbackCountdown.observe(this) { text ->
+            binding.activityCountdownLabel.text = text
+        }
         binding.activityPlaybackFileEnableBtn.setOnCheckedChangeListener { _, checked ->
             GlobalData.playbackFileEnabled.postValue(checked)
         }
 
-        binding.activityRandomSeekToggle.setOnCheckedChangeListener {_, checked ->
+        binding.activityRandomSeekToggle.setOnCheckedChangeListener { _, checked ->
             GlobalData.randomSeekEnabled.postValue(checked)
         }
     }
@@ -148,10 +153,6 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         binding.activityTrackArtist.setTextColor(getProperTextColor())
         updatePlayerState()
         updateTrackInfo()
-    }
-
-    private fun updatePlaybackContent(txt: String) {
-
     }
 
     override fun onPause() {
@@ -226,19 +227,34 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
             activityPauseDurationSecs.maxValue = durationValues.size - 1
 
             activityPlayDurationSecs.displayedValues = durationValues.toTypedArray()
-            activityPlayDurationSecs.value = 0
+            val defaultDuration = 10
+            val savedPlayDurationIndex = durationValues.indexOfFirst {
+                it == (sharedPreferences?.getInt(
+                    "playDurationSeconds",
+                    defaultDuration
+                ) ?: defaultDuration).toString() + "s"
+            }
+            activityPlayDurationSecs.value = savedPlayDurationIndex.coerceAtLeast(0)
             activityPauseDurationSecs.displayedValues = durationValues.toTypedArray()
-            activityPauseDurationSecs.value = 0
+            val savedPauseDurationIndex = durationValues.indexOfFirst {
+                it == (sharedPreferences?.getInt(
+                    "pauseDurationSeconds",
+                    defaultDuration
+                ) ?: defaultDuration).toString() + "s"
+            }
+            activityPauseDurationSecs.value = savedPauseDurationIndex.coerceAtLeast(0)
 
             //Initial values
             updateGlobalValue(GlobalData.playDurationSeconds, activityPlayDurationSecs.value, activityPlayDurationSecs.displayedValues)
             updateGlobalValue(GlobalData.pauseDurationSeconds, activityPauseDurationSecs.value, activityPauseDurationSecs.displayedValues)
 
-            activityPlayDurationSecs.setOnValueChangedListener { picker: NumberPicker, _: Int, _: Int ->
-                updateGlobalValue(GlobalData.playDurationSeconds, picker.value, activityPlayDurationSecs.displayedValues)
+            activityPlayDurationSecs.setOnValueChangedListener { _: NumberPicker, _: Int, newValue: Int ->
+                updateGlobalValue(GlobalData.playDurationSeconds, newValue, activityPlayDurationSecs.displayedValues)
+                sharedPreferences?.edit()?.putInt("playDurationSeconds", newValue)?.apply()
             }
-            activityPauseDurationSecs.setOnValueChangedListener { picker: NumberPicker, _: Int, _: Int ->
-                updateGlobalValue(GlobalData.pauseDurationSeconds, picker.value, activityPauseDurationSecs.displayedValues)
+            activityPauseDurationSecs.setOnValueChangedListener { _: NumberPicker, _: Int, newValue: Int ->
+                updateGlobalValue(GlobalData.pauseDurationSeconds, newValue, activityPauseDurationSecs.displayedValues)
+                sharedPreferences?.edit()?.putInt("pauseDurationSeconds", newValue)?.apply()
             }
             activityTrackReplayRandom.setOnClickListener {
                 withPlayer {
@@ -263,9 +279,11 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         }
     }
 
-    private fun updateGlobalValue(value: MutableLiveData<Int>, idx: Int, displayedValues: Array<String>) {
+    private fun updateGlobalValue(value: MutableLiveData<Int>, idx: Int, displayedValues: Array<String>): Int {
         val secs = displayedValues[idx].replace("s", "")
-        value.postValue(secs.toInt())
+        val secsValue = secs.toInt()
+        value.postValue(secsValue)
+        return secsValue
     }
 
     private fun setupNextTrackInfo(item: MediaItem?) {

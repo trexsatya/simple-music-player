@@ -16,6 +16,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaLibraryService
 import com.satya.musicplayer.PlaybackCommand
+import com.satya.musicplayer.Utils
 import com.satya.musicplayer.activities.MainActivity
 import com.satya.musicplayer.extensions.broadcastUpdateWidgetState
 import com.satya.musicplayer.extensions.config
@@ -101,8 +102,23 @@ internal fun PlaybackService.mediaNextButtonClicked(player: SimpleMusicPlayer) {
 }
 
 internal fun PlaybackService.replayLastRandom() {
-    lastRandomPlaybackCommand?.let {
-
+    val pauseAfterMs = (GlobalData.playDurationSeconds.value ?: defaultStopIntervalMs).toLong() * 1000
+    val resumePlayingAfterMs = (GlobalData.pauseDurationSeconds.value ?: defaultStopIntervalMs).toLong() * 1000
+    val commands = PlaybackService.playbackCommands
+    if(commands.isNotEmpty()) {
+        lastRandomPlaybackCommand?.let {
+            executeCommand(it, commands, pauseAfterMs, resumePlayingAfterMs)
+        }
+    } else {
+        lastRandomPosition?.let {
+            val msg = "Replaying last random ${Utils.formatMillis(it)}"
+            withPlayer {
+                player.seekTo(it)
+                player.play()
+                updatePlaybackContent(msg)
+            }
+            schedulePauseThenResume(pauseAfterMs, resumePlayingAfterMs, msg, continueAfterResume = true)
+        }
     }
 }
 
@@ -114,40 +130,53 @@ internal fun PlaybackService.seekRandom() {
 
 private fun PlaybackService.seekRandomInternal() {
     val commands = PlaybackService.playbackCommands
-    var pauseAfterMs = (GlobalData.playDurationSeconds.value ?: defaultStopIntervalMs).toLong() * 1000
-    var resumePlayingAfterMs = (GlobalData.pauseDurationSeconds.value ?: defaultStopIntervalMs).toLong() * 1000
+    val pauseAfterMs = (GlobalData.playDurationSeconds.value ?: defaultStopIntervalMs).toLong() * 1000
+    val resumePlayingAfterMs = (GlobalData.pauseDurationSeconds.value ?: defaultStopIntervalMs).toLong() * 1000
 
-    var msg = "seekRandomInternal"
+    var msg: String
     if (commands.isEmpty()) {
         withPlayer {
             val tm = (0..player.duration / 1000).random() * 1000
             player.seekTo(tm)
-            msg = "randomSeek to ${tm / 1000}s."
+            msg = "randomSeek to ${Utils.formatMillis(tm)}."
+            updatePlaybackContent(msg)
+            lastRandomPosition = tm
             schedulePauseThenResume(pauseAfterMs, resumePlayingAfterMs, msg, continueAfterResume = true)
         }
     } else {
         val random = commands.withIndex().toList().randomOrNull()
-        withPlayer {
-            if (random == null) {
-                player.seekTo(0)
-                nextCommand = commands[0]
-            } else {
-                player.seekTo(random.value.timestampMs)
-                nextCommand = commands.getOrElse(random.index + 1) { commands[0] }
-                if (nextCommand!!.timestampMs >= random.value.timestampMs) {
-                    pauseAfterMs = nextCommand!!.timestampMs - random.value.timestampMs
-                } else {
+        executeCommand(random, commands, pauseAfterMs, resumePlayingAfterMs)
+        lastRandomPlaybackCommand = random
+    }
+}
 
-                }
-                when (val cmd = random.value) {
-                    is PlaybackCommand.Stop -> {
-                        resumePlayingAfterMs = cmd.durationMs
-                    }
-                    else -> {}
-                }
-                updatePlaybackContent(random.value.text)
-                schedulePauseThenResume(pauseAfterMs, resumePlayingAfterMs, random.value.text, continueAfterResume = true)
+private fun PlaybackService.executeCommand(
+    random: IndexedValue<PlaybackCommand>?,
+    commands: List<PlaybackCommand>,
+    pauseAfterMs: Long,
+    resumePlayingAfterMs: Long
+) {
+    var pauseAfterMs1 = pauseAfterMs
+    var resumePlayingAfterMs1 = resumePlayingAfterMs
+    withPlayer {
+        if (random == null) {
+            player.seekTo(0)
+            nextCommand = commands[0]
+        } else {
+            player.seekTo(random.value.timestampMs)
+            nextCommand = commands.getOrElse(random.index + 1) { commands[0] }
+            if (nextCommand!!.timestampMs >= random.value.timestampMs) {
+                pauseAfterMs1 = nextCommand!!.timestampMs - random.value.timestampMs
             }
+            when (val cmd = random.value) {
+                is PlaybackCommand.Stop -> {
+                    resumePlayingAfterMs1 = cmd.durationMs
+                }
+
+                else -> {}
+            }
+            updatePlaybackContent(random.value.text)
+            schedulePauseThenResume(pauseAfterMs1, resumePlayingAfterMs1, random.value.text, continueAfterResume = true)
         }
     }
 }
@@ -228,15 +257,34 @@ internal fun PlaybackService.schedulePauseThenResume(
             }
             nextScheduledResumeAction = resumeAction
             scheduler.postDelayed(resumeAction, safeResumeMs)
+            startCountdown(safeResumeMs)
             Log.d("PlaybackService", "⏳ Scheduled resume (token=$token) after ${safeResumeMs/1000}s at ${Instant.now().plusMillis(safeResumeMs)}. $pauseMessage")
         }
     }
 
     nextScheduledPauseAction = pauseAction
     scheduler.postDelayed(pauseAction, safePauseMs)
+    startCountdown(safePauseMs)
     Log.d("PlaybackService", "▶ Scheduled pause (token=$token) after ${safePauseMs/1000}s at ${Instant.now().plusMillis(safePauseMs)} (resume ${safeResumeMs/1000}s). $pauseMessage")
 }
 
+private var countdownRunnable: Runnable? = null
+
+internal fun PlaybackService.startCountdown(totalMs: Long) {
+    countdownRunnable?.let { handler.removeCallbacks(it) }
+
+    var remaining = totalMs / 1000
+    countdownRunnable = object : Runnable {
+        override fun run() {
+            if (remaining >= 0) {
+                GlobalData.playbackCountdown.postValue("${remaining}s")
+                remaining--
+                handler.postDelayed(this, 1000)
+            }
+        }
+    }
+    handler.post(countdownRunnable!!)
+}
 
 internal fun PlaybackService.waitForDurationAndRun(action: () -> Unit) {
     handler.postDelayed(object : Runnable {

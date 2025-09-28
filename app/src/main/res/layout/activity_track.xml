@@ -69,6 +69,17 @@
                 app:layout_constraintStart_toEndOf="@id/activity_track_playback_control_file_btn"
                 app:layout_constraintTop_toBottomOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/activity_countdown_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/extra_big_text_size"
+                android:text="(X)s"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/activity_track_playback_control_file_btn"
+                app:layout_constraintTop_toBottomOf="@id/activity_playback_file_enable_btn"
+                />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView

@@ -11,6 +11,8 @@ import com.simplemobiletools.commons.extensions.toInt
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 sealed class PlaybackCommand(val timestampMs: Long, val text: String) {
     class Stop(timestampMs: Long, val durationMs: Long, val message: String, text: String) : PlaybackCommand(timestampMs, text)
@@ -81,7 +83,13 @@ class Utils {
             return toSeconds(time) * 1000;
         }
 
+        fun formatMillis(millis: Long): String {
+            val hours = TimeUnit.MILLISECONDS.toHours(millis)
+            val minutes = TimeUnit.MILLISECONDS.toMinutes(millis) % 60
+            val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
 
+            return String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
+        }
 
         fun parseTimestamp(timestamp: String): Triple<Int, Int, Int>? {
             try {
