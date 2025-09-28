@@ -35,8 +35,8 @@ app-build-kotlinJVMTarget = "17"
 shortcut-badger = "1.1.22"
 #versioning
 app-version-appId = "com.satya.musicplayer"
-app-version-versionCode = "127"
-app-version-versionName = "5.18.11"
+app-version-versionCode = "129"
+app-version-versionName = "5.18.13"
 junitVersion = "4.12"
 [libraries]
 #AndroidX

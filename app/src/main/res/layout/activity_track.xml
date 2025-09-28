@@ -5,8 +5,8 @@
     android:id="@+id/activity_track_Scrollview"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:keepScreenOn="true"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:keepScreenOn="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/activity_track_holder"
@@ -28,48 +28,61 @@
             android:id="@+id/playback_file_cntnr"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/activity_track_image"
-            >
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/activity_track_image">
+
+            <NumberPicker
+                android:id="@+id/activity_play_duration_secs"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <NumberPicker
+                android:id="@+id/activity_pause_duration_secs"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintLeft_toRightOf="@id/activity_play_duration_secs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
             <TextView
                 android:id="@+id/activity_track_playback_control_file_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:focusable="true"
-                android:text="Playback File"
-                android:gravity="center_horizontal"
                 android:clickable="true"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
+                android:focusable="true"
+                android:gravity="center_horizontal"
+                android:text="Playback File"
                 app:layout_constraintEnd_toEndOf="parent"
-                />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ToggleButton
                 android:id="@+id/activity_playback_file_enable_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textOn="PF ON"
-                android:textOff="PF OFF"
                 android:checked="true"
-                app:layout_constraintTop_toBottomOf="parent"
+                android:textOff="PF OFF"
+                android:textOn="PF ON"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/activity_track_playback_control_file_btn"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView
             android:id="@+id/activity_playback_control_file_content"
             android:layout_width="wrap_content"
             android:layout_height="500dp"
-            android:scrollbars="vertical"
-            android:focusable="true"
-            android:text="..."
-            android:gravity="center_horizontal"
             android:clickable="true"
-            app:layout_constraintStart_toStartOf="parent"
+            android:focusable="true"
+            android:gravity="center_horizontal"
+            android:scrollbars="vertical"
+            android:text="..."
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/playback_file_cntnr" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/activity_track_title" />
 
         <ImageView
             android:id="@+id/activity_track_top_shadow"
@@ -123,22 +136,23 @@
 
         <Button
             android:id="@+id/activity_track_replay_random"
-            android:text="RPL"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/activity_track_artist"
-            app:layout_constraintRight_toLeftOf="@id/activity_track_artist"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-        </Button>
-        <Button
-            android:id="@+id/activity_track_random_seek"
-            android:text="RND"
+            android:layout_height="wrap_content"
+            android:text="RPL"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintLeft_toRightOf="@id/activity_track_artist"
-            app:layout_constraintTop_toTopOf="@id/activity_track_artist"
+            app:layout_constraintTop_toTopOf="@id/activity_track_artist"/>
+
+        <ToggleButton
+            android:id="@+id/activity_random_seek_toggle"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-        </Button>
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:textOff="RND OFF"
+            android:textOn="RND ON"
+            app:layout_constraintRight_toLeftOf="@id/activity_track_artist"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/activity_track_artist" />
 
         <com.simplemobiletools.commons.views.MyTextView
             android:id="@+id/activity_track_speed"

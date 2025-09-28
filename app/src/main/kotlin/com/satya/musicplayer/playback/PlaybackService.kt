@@ -8,6 +8,8 @@ import androidx.core.os.postDelayed
 import androidx.media3.common.*
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.*
+import com.satya.musicplayer.PlaybackCommand
+import com.satya.musicplayer.Utils.Companion.parseTimestampCommands
 import com.simplemobiletools.commons.extensions.hasPermission
 import com.simplemobiletools.commons.extensions.showErrorToast
 import com.satya.musicplayer.extensions.*
@@ -28,13 +30,10 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
     internal lateinit var playerHandler: Handler
     internal lateinit var mediaSession: MediaLibrarySession
     internal lateinit var mediaItemProvider: MediaItemProvider
-    internal lateinit var timer: Timer
-    internal var  pollingInterval: Long = 300
-    internal var  playersLastPosition = 0L
-    internal var  lastPausedAt:Instant? = null
-    internal var sleepTime = RESUME_AFTER_MS
-    internal var lastRandomTimestamp: Triple<Int, String, Boolean>? = null
 
+    internal var lastRandomPlaybackCommand: IndexedValue<PlaybackCommand>? = null
+    var lastDefaultStopMs: Long = 0L
+    val defaultStopIntervalMs = 10_000L
     internal var currentRoot = ""
 
     override fun onCreate() {
@@ -111,13 +110,16 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
             private set
         var nextMediaItem: MediaItem? = null
             private set
-        var currentItemPlaybackTimestamps: List<Triple<Int, String, Boolean>> = listOf()
-        val processedTimestamps = mutableSetOf<Triple<Int, String, Boolean>>()
+        var playbackCommands: List<PlaybackCommand> = listOf()
 
         fun updatePlaybackInfo(player: Player) {
             currentMediaItem = player.currentMediaItem
             nextMediaItem = player.nextMediaItem
             isPlaying = player.isReallyPlaying
+        }
+
+        fun setPlaybackCommands(playbackFileContent: String) {
+            playbackCommands = playbackFileContent.trimIndent().lines().mapNotNull { PlaybackCommand.from(it) }
         }
     }
 }

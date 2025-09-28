@@ -17,6 +17,7 @@ import com.satya.musicplayer.models.Events
 import com.satya.musicplayer.models.Track
 import com.satya.musicplayer.models.toMediaItems
 import com.satya.musicplayer.playback.CustomCommands
+import com.satya.musicplayer.playback.GlobalData.manualPlayPause
 import com.satya.musicplayer.playback.PlaybackService.Companion.updatePlaybackInfo
 import org.greenrobot.eventbus.EventBus
 import java.io.File
@@ -74,7 +75,10 @@ abstract class SimpleControllerActivity : SimpleActivity(), Player.Listener {
         }
     }
 
-    fun togglePlayback() = withPlayer { togglePlayback() }
+    fun togglePlayback() = withPlayer {
+        manualPlayPause.postValue(true)
+        togglePlayback()
+    }
 
     fun addTracksToQueue(tracks: List<Track>, callback: () -> Unit) {
         withPlayer {

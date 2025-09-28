@@ -1,7 +1,6 @@
 package com.satya.musicplayer.activities
 
 import android.annotation.SuppressLint
-import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -13,33 +12,27 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
-import android.util.Log
 import android.util.Size
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
+import android.widget.NumberPicker
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.os.bundleOf
 import androidx.core.os.postDelayed
 import androidx.core.view.GestureDetectorCompat
+import androidx.lifecycle.MutableLiveData
 import androidx.media3.common.MediaItem
-import androidx.media3.session.MediaController
-import androidx.media3.session.SessionCommand
-import androidx.media3.session.SessionToken
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
-import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.MoreExecutors
 import com.satya.musicplayer.R
-import com.satya.musicplayer.Utils.Companion.parseTimestampCommands
 import com.satya.musicplayer.Utils.Companion.readTextFromUri
 import com.satya.musicplayer.databinding.ActivityTrackBinding
 import com.satya.musicplayer.extensions.*
 import com.satya.musicplayer.fragments.PlaybackSpeedFragment
-import com.satya.musicplayer.helpers.EXTRA_SHUFFLE_INDICES
 import com.satya.musicplayer.helpers.PlaybackSetting
 import com.satya.musicplayer.helpers.SEEK_INTERVAL_S
 import com.satya.musicplayer.interfaces.PlaybackSpeedListener
@@ -47,6 +40,7 @@ import com.satya.musicplayer.models.Track
 import com.satya.musicplayer.playback.CustomCommands
 import com.satya.musicplayer.playback.GlobalData
 import com.satya.musicplayer.playback.PlaybackService
+import com.satya.musicplayer.playback.PlaybackService.Companion.setPlaybackCommands
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.MEDIUM_ALPHA
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
@@ -65,7 +59,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
     private val updateIntervalMillis = 500L
     private val PICK_FILE_REQUEST_CODE: Int = 1
     private val binding by viewBinding(ActivityTrackBinding::inflate)
-    private var turn = 0
+    private var evenTurn = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         showTransparentTop = true
@@ -105,10 +99,10 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
 
         GlobalData.playbackFileContent.observe(this) { text ->
             runOnUiThread {
-                turn = (turn + 1) % 2
+                evenTurn = !evenTurn
                 findViewById<TextView>(R.id.activity_playback_control_file_content).also {
                     it.text = text
-                    if(turn == 0) {
+                    if(evenTurn) {
                         it.setTextColor(Color.YELLOW)
                     } else {
                         it.setTextColor(Color.GREEN)
@@ -124,6 +118,10 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
 
         binding.activityPlaybackFileEnableBtn.setOnCheckedChangeListener { _, checked ->
             GlobalData.playbackFileEnabled.postValue(checked)
+        }
+
+        binding.activityRandomSeekToggle.setOnCheckedChangeListener {_, checked ->
+            GlobalData.randomSeekEnabled.postValue(checked)
         }
     }
 
@@ -214,39 +212,60 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         }
     }
 
-    private fun setupButtons() = binding.apply {
-        activityTrackToggleShuffle.setOnClickListener { withPlayer { toggleShuffle() } }
-        activityTrackPrevious.setOnClickListener { withPlayer { forceSeekToPrevious() } }
-        activityTrackPlayPause.setOnClickListener { togglePlayback() }
-        activityTrackNext.setOnClickListener { withPlayer { forceSeekToNext() } }
-        activityTrackRandomSeek.setOnClickListener {
-            withPlayer {
-                sendCommand(
-                    command = CustomCommands.SEEK_RANDOM,
-                    extras = bundleOf("NOT_REQUIRED" to "_")
-                )
-            }
-        }
-        activityTrackReplayRandom.setOnClickListener {
-            withPlayer {
-                sendCommand(
-                    command = CustomCommands.REPLAY_LAST_RANDOM,
-                    extras = bundleOf("NOT_REQUIRED" to "_")
-                )
-            }
-        }
-        activityTrackProgressCurrent.setOnClickListener { seekBack() }
-        activityTrackProgressMax.setOnClickListener { seekForward() }
-        activityTrackPlaybackSetting.setOnClickListener { togglePlaybackSetting() }
-        activityTrackSpeedClickArea.setOnClickListener { showPlaybackSpeedPicker() }
-        activityTrackPlaybackControlFileBtn.setOnClickListener { openFilePicker() }
-        setupShuffleButton()
-        setupPlaybackSettingButton()
-        setupSeekbar()
+    private fun setupButtons(): ActivityTrackBinding {
+        val durationValues =
+            listOf("10s", "20s", "30s", "40s", "50s", "60s", "70s", "80s", "90s", "100s", "110s", "120s", "130s", "140s", "150s", "160s", "170s", "180s")
+        return binding.apply {
+            activityTrackToggleShuffle.setOnClickListener { withPlayer { toggleShuffle() } }
+            activityTrackPrevious.setOnClickListener { withPlayer { forceSeekToPrevious() } }
+            activityTrackPlayPause.setOnClickListener { togglePlayback() }
+            activityTrackNext.setOnClickListener { withPlayer { forceSeekToNext() } }
+            activityPlayDurationSecs.minValue = 0
+            activityPlayDurationSecs.maxValue = durationValues.size - 1
+            activityPauseDurationSecs.minValue = 0
+            activityPauseDurationSecs.maxValue = durationValues.size - 1
 
-        arrayOf(activityTrackPrevious, activityTrackPlayPause, activityTrackNext).forEach {
-            it.applyColorFilter(getProperTextColor())
+            activityPlayDurationSecs.displayedValues = durationValues.toTypedArray()
+            activityPlayDurationSecs.value = 0
+            activityPauseDurationSecs.displayedValues = durationValues.toTypedArray()
+            activityPauseDurationSecs.value = 0
+
+            //Initial values
+            updateGlobalValue(GlobalData.playDurationSeconds, activityPlayDurationSecs.value, activityPlayDurationSecs.displayedValues)
+            updateGlobalValue(GlobalData.pauseDurationSeconds, activityPauseDurationSecs.value, activityPauseDurationSecs.displayedValues)
+
+            activityPlayDurationSecs.setOnValueChangedListener { picker: NumberPicker, _: Int, _: Int ->
+                updateGlobalValue(GlobalData.playDurationSeconds, picker.value, activityPlayDurationSecs.displayedValues)
+            }
+            activityPauseDurationSecs.setOnValueChangedListener { picker: NumberPicker, _: Int, _: Int ->
+                updateGlobalValue(GlobalData.pauseDurationSeconds, picker.value, activityPauseDurationSecs.displayedValues)
+            }
+            activityTrackReplayRandom.setOnClickListener {
+                withPlayer {
+                    sendCommand(
+                        command = CustomCommands.REPLAY_LAST_RANDOM,
+                        extras = bundleOf("NOT_REQUIRED" to "_")
+                    )
+                }
+            }
+            activityTrackProgressCurrent.setOnClickListener { seekBack() }
+            activityTrackProgressMax.setOnClickListener { seekForward() }
+            activityTrackPlaybackSetting.setOnClickListener { togglePlaybackSetting() }
+            activityTrackSpeedClickArea.setOnClickListener { showPlaybackSpeedPicker() }
+            activityTrackPlaybackControlFileBtn.setOnClickListener { openFilePicker() }
+            setupShuffleButton()
+            setupPlaybackSettingButton()
+            setupSeekbar()
+
+            arrayOf(activityTrackPrevious, activityTrackPlayPause, activityTrackNext).forEach {
+                it.applyColorFilter(getProperTextColor())
+            }
         }
+    }
+
+    private fun updateGlobalValue(value: MutableLiveData<Int>, idx: Int, displayedValues: Array<String>) {
+        val secs = displayedValues[idx].replace("s", "")
+        value.postValue(secs.toInt())
     }
 
     private fun setupNextTrackInfo(item: MediaItem?) {
@@ -397,7 +416,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         try {
             val playbackFileContent = readTextFromUri(this, p)
             if (playbackFileContent.isNotEmpty()) {
-                PlaybackService.currentItemPlaybackTimestamps = parseTimestampCommands(playbackFileContent.trimIndent())
+                setPlaybackCommands(playbackFileContent)
             }
 
             val ah = this.audioHelper
@@ -513,8 +532,8 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         withPlayer {
             setupTrackInfo(currentMediaItem)
             setupNextTrackInfo(nextMediaItem)
-            PlaybackService.currentItemPlaybackTimestamps = listOf()
-            PlaybackService.processedTimestamps.clear()
+            maybeSeekRandom()
+            PlaybackService.playbackCommands = listOf()
             val track = this.currentMediaItem?.toTrack()
             val id = track?.id
             if (id != null) {
@@ -522,10 +541,22 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
                     ensureBackgroundThread {
                         if (playbackFile.isNotEmpty()) {
                             GlobalData.playbackFileName.postValue("<from db>")
-                            PlaybackService.currentItemPlaybackTimestamps = parseTimestampCommands(playbackFile.trimIndent())
+                            setPlaybackCommands(playbackFile.trimIndent())
+                            maybeSeekRandom()
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private fun maybeSeekRandom() {
+        if (GlobalData.randomSeekEnabled.value == true) {
+            withPlayer {
+                sendCommand(
+                    command = CustomCommands.SEEK_RANDOM,
+                    extras = bundleOf("NOT_REQUIRED" to "_")
+                )
             }
         }
     }

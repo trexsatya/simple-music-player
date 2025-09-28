@@ -2,10 +2,36 @@ package com.satya.musicplayer
 
 import android.content.Context
 import android.net.Uri
+import com.satya.musicplayer.Utils.Companion.extractFlexibleTimestamp
+import com.satya.musicplayer.Utils.Companion.parseTimestamp
+import com.satya.musicplayer.Utils.Companion.parseTimestampCommands
+import com.satya.musicplayer.Utils.Companion.toMilliSeconds
+import com.satya.musicplayer.playback.GlobalData
 import com.simplemobiletools.commons.extensions.toInt
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+
+sealed class PlaybackCommand(val timestampMs: Long, val text: String) {
+    class Stop(timestampMs: Long, val durationMs: Long, val message: String, text: String) : PlaybackCommand(timestampMs, text)
+    class Jump(timestampMs: Long, val targetMs: Long, text: String) : PlaybackCommand(timestampMs, text)
+    class Repeat(timestampMs: Long, val repeatCount: Int, text: String) : PlaybackCommand(timestampMs, text)
+    class ShowMessage(timestampMs: Long, val message: String, text: String) : PlaybackCommand(timestampMs, text)
+
+    companion object {
+        fun from(line: String): PlaybackCommand? {
+            val timestamp = parseTimestampCommands(line) ?: return null
+            val duration = extractFlexibleTimestamp(timestamp.second)?.let { parseTimestamp(it) }?.let { toMilliSeconds(it) }
+            val timestampMs = timestamp.first.toLong()
+            return when {
+                timestamp.second.trim().lowercase().startsWith("stop") -> {
+                    Stop(timestampMs, duration?.toLong() ?: ((GlobalData.pauseDurationSeconds.value ?: 30) * 1000L), timestamp.second, line)
+                }
+                else -> ShowMessage(timestampMs, timestamp.second, line)
+            }
+        }
+    }
+}
 
 class Utils {
     companion object {
@@ -29,22 +55,21 @@ class Utils {
          *     12:00:03 -> stop 5s
          * """.trimIndent()
          */
-        fun parseTimestampCommands(input: String): List<Triple<Int, String, Boolean>> {
-            val result = mutableListOf<Triple<Int, String, Boolean>>()
-            input.lines().forEach { line ->
-                var cmd = ""
-                var tm: Int? = -1
-                val parts = line.split("->").map { it.trim() }
-                if (parts.size == 2) {
-                    cmd = parts[1]
-                    tm = parseTimestamp(parts[0])?.let { toMilliSeconds(it) }
-                } else if (parts.size == 1 && parts[0].isNotEmpty()) {
-                    cmd = ""
-                    tm = parseTimestamp(parts[0])?.let { toMilliSeconds(it) }
-                }
-                if(tm != null && tm > 0) result.add(Triple(tm, cmd, false))
+        fun parseTimestampCommands(line: String): Triple<Int, String, Boolean>? {
+            var cmd = ""
+            var tm: Int? = -1
+            val parts = line.split("->").map { it.trim() }
+            if (parts.size == 2) {
+                cmd = parts[1]
+                tm = parseTimestamp(parts[0])?.let { toMilliSeconds(it) }
+            } else if (parts.size == 1 && parts[0].isNotEmpty()) {
+                cmd = ""
+                tm = parseTimestamp(parts[0])?.let { toMilliSeconds(it) }
             }
-            return result
+            tm?.let {
+                return Triple(it, cmd, false)
+            }
+            return null
         }
 
 
