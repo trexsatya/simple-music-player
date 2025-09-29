@@ -11,4 +11,5 @@ object GlobalData {
     val pauseDurationSeconds = MutableLiveData(50)
     val playDurationSeconds = MutableLiveData(30)
     val manualPlayPause = MutableLiveData(false)
+    val questionAnswerSetting = MutableLiveData(0)
 }

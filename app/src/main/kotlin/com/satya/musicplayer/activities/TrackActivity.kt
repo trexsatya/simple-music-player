@@ -256,6 +256,15 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
                 updateGlobalValue(GlobalData.pauseDurationSeconds, newValue, activityPauseDurationSecs.displayedValues)
                 sharedPreferences?.edit()?.putInt("pauseDurationSeconds", newValue)?.apply()
             }
+
+            activityQuestionAnswerSetting.minValue = 0
+            activityQuestionAnswerSetting.maxValue = 2
+            activityQuestionAnswerSetting.value = 0
+            activityQuestionAnswerSetting.displayedValues = arrayOf("Ques-Ans", "Ques-", "-Ans")
+            activityQuestionAnswerSetting.setOnValueChangedListener { _: NumberPicker, _: Int, newValue: Int ->
+                GlobalData.questionAnswerSetting.postValue(newValue)
+            }
+
             activityTrackReplayRandom.setOnClickListener {
                 withPlayer {
                     sendCommand(
@@ -561,6 +570,8 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
                             GlobalData.playbackFileName.postValue("<from db>")
                             setPlaybackCommands(playbackFile.trimIndent())
                             maybeSeekRandom()
+                        } else {
+                            GlobalData.playbackFileName.postValue("[Playback File]")
                         }
                     }
                 }

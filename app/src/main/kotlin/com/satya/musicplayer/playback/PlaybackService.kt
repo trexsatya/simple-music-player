@@ -118,6 +118,16 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
             isPlaying = player.isReallyPlaying
         }
 
+        fun getEffectivePlaybackCommands(): List<PlaybackCommand> {
+            if(GlobalData.questionAnswerSetting.value == 1) {
+                return playbackCommands.filter { !it.isAnswer() }
+            }
+            if(GlobalData.questionAnswerSetting.value == 2) {
+                return playbackCommands.filter { !it.isQuestion() }
+            }
+            return playbackCommands
+        }
+
         fun setPlaybackCommands(playbackFileContent: String) {
             playbackCommands = playbackFileContent.trimIndent().lines().mapNotNull { PlaybackCommand.from(it) }
         }

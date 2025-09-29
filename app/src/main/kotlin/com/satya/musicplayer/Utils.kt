@@ -15,6 +15,14 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 sealed class PlaybackCommand(val timestampMs: Long, val text: String) {
+    fun isAnswer(): Boolean {
+        return text.contains("__ANSWER__")
+    }
+
+    fun isQuestion(): Boolean {
+        return text.contains("__QUESTION__")
+    }
+
     class Stop(timestampMs: Long, val durationMs: Long, val message: String, text: String) : PlaybackCommand(timestampMs, text)
     class Jump(timestampMs: Long, val targetMs: Long, text: String) : PlaybackCommand(timestampMs, text)
     class Repeat(timestampMs: Long, val repeatCount: Int, text: String) : PlaybackCommand(timestampMs, text)
