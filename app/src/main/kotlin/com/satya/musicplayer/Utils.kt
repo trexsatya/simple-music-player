@@ -15,6 +15,9 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 sealed class PlaybackCommand(val timestampMs: Long, val text: String) {
+    override fun toString(): String {
+        return "Cmd: $text"
+    }
     fun isAnswer(): Boolean {
         return text.contains("__ANSWER__")
     }

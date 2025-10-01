@@ -94,6 +94,10 @@ android {
         checkReleaseBuilds = false
         abortOnError = false
     }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
@@ -114,6 +118,17 @@ dependencies {
     implementation(libs.jaudiotagger)
     androidTestImplementation(libs.junit.junit)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
+
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(libs.kotlin.test.junit)
+
+    // Mockito for JVM unit tests
+    testImplementation(libs.mockito.core)
+
+    // Kotlin extensions (nice DSL for stubbing, verify, etc.)
+    testImplementation(libs.mockito.kotlin)
 
     implementation(libs.bundles.room)
     ksp(libs.androidx.room.compiler)

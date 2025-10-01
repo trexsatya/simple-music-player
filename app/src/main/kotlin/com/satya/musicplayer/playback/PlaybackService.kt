@@ -9,18 +9,14 @@ import androidx.media3.common.*
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.*
 import com.satya.musicplayer.PlaybackCommand
-import com.satya.musicplayer.Utils.Companion.parseTimestampCommands
 import com.simplemobiletools.commons.extensions.hasPermission
 import com.simplemobiletools.commons.extensions.showErrorToast
 import com.satya.musicplayer.extensions.*
 import com.satya.musicplayer.helpers.NotificationHelper
 import com.satya.musicplayer.helpers.getPermissionToRequest
 import com.satya.musicplayer.playback.library.MediaItemProvider
-import com.satya.musicplayer.playback.player.RESUME_AFTER_MS
 import com.satya.musicplayer.playback.player.SimpleMusicPlayer
 import com.satya.musicplayer.playback.player.initializeSessionAndPlayer
-import java.time.Instant
-import java.util.Timer
 
 @OptIn(UnstableApi::class)
 class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
@@ -31,7 +27,7 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
     internal lateinit var mediaSession: MediaLibrarySession
     internal lateinit var mediaItemProvider: MediaItemProvider
 
-    internal var lastRandomPlaybackCommand: IndexedValue<PlaybackCommand>? = null
+    internal var previousRandomPlaybackCommand: IndexedValue<PlaybackCommand>? = null
     internal var lastRandomPosition: Long? = null
     val defaultStopIntervalMs = 10_000L
     internal var currentRoot = ""
@@ -111,6 +107,7 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
         var nextMediaItem: MediaItem? = null
             private set
         var playbackCommands: List<PlaybackCommand> = listOf()
+        var turnForQuestion = true
 
         fun updatePlaybackInfo(player: Player) {
             currentMediaItem = player.currentMediaItem
