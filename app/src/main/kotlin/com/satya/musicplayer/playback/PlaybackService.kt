@@ -15,6 +15,7 @@ import com.satya.musicplayer.extensions.*
 import com.satya.musicplayer.helpers.NotificationHelper
 import com.satya.musicplayer.helpers.getPermissionToRequest
 import com.satya.musicplayer.playback.library.MediaItemProvider
+import com.satya.musicplayer.playback.player.ShuffleBag
 import com.satya.musicplayer.playback.player.SimpleMusicPlayer
 import com.satya.musicplayer.playback.player.initializeSessionAndPlayer
 
@@ -107,6 +108,7 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
         var nextMediaItem: MediaItem? = null
             private set
         var playbackCommands: List<PlaybackCommand> = listOf()
+        var questionBag = ShuffleBag<IndexedValue<PlaybackCommand>>(listOf())
         var turnForQuestion = true
 
         fun updatePlaybackInfo(player: Player) {
@@ -127,6 +129,7 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
 
         fun setPlaybackCommands(playbackFileContent: String) {
             playbackCommands = playbackFileContent.trimIndent().lines().mapNotNull { PlaybackCommand.from(it) }
+            questionBag = ShuffleBag(playbackCommands.withIndex().toList().filter { it.value.isQuestion() })
         }
     }
 }

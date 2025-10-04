@@ -561,6 +561,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
             setupNextTrackInfo(nextMediaItem)
             maybeSeekRandom()
             PlaybackService.playbackCommands = listOf()
+            PlaybackService.turnForQuestion = true
             val track = this.currentMediaItem?.toTrack()
             val id = track?.id
             if (id != null) {

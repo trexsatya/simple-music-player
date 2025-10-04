@@ -125,10 +125,10 @@ internal fun PlaybackService.replayLastRandom() {
 internal fun PlaybackService.seekRandomOrPlayAnswer() {
     waitForDurationAndRun {
         if(!questionAnswerEnabled()) {
-            seekRandomInternal()
+            seekRandomInternalOrRandomQuestion()
         } else {
             if(PlaybackService.turnForQuestion) {
-                seekRandomInternal()
+                seekRandomInternalOrRandomQuestion()
                 PlaybackService.turnForQuestion = false
             } else {
                 playAnswer(previousRandomPlaybackCommand)
@@ -153,7 +153,8 @@ fun PlaybackService.playAnswer(command: IndexedValue<PlaybackCommand>?) {
     if(previousRandomPlaybackCommand == null) {
         Log.d("PlaybackService", "Prev cmd: $command. Falling back to random.")
         PlaybackService.turnForQuestion = true
-        seekRandomInternal()
+        seekRandomInternalOrRandomQuestion()
+        return
     }
     previousRandomPlaybackCommand?.let {
         commands.getOrNull(it.index + 1)?.let { cmd ->
@@ -162,7 +163,7 @@ fun PlaybackService.playAnswer(command: IndexedValue<PlaybackCommand>?) {
     }
 }
 
-private fun PlaybackService.seekRandomInternal() {
+private fun PlaybackService.seekRandomInternalOrRandomQuestion() {
     val commands = getEffectivePlaybackCommands()
     val (pauseAfterMs, resumePlayingAfterMs) = defaultDurations()
 
@@ -177,7 +178,7 @@ private fun PlaybackService.seekRandomInternal() {
             schedulePauseThenResume(pauseAfterMs, resumePlayingAfterMs, msg, continueAfterResume = true)
         }
     } else {
-        val random = ShuffleBag(commands.withIndex().toList().filter { it.value.isQuestion() }).next()
+        val random = PlaybackService.questionBag.next()
         executeCommand(random, commands, pauseAfterMs, resumePlayingAfterMs)
         previousRandomPlaybackCommand = random
     }
@@ -211,6 +212,8 @@ private fun PlaybackService.executeCommand(
             if (nextCommand!!.timestampMs >= commandToExecuteNow!!.timestampMs) {
                 pauseAfterMs1 = nextCommand!!.timestampMs - commandToExecuteNow!!.timestampMs
             }
+        } else if(nextIndex == commands.size) { //last command => play until end
+            pauseAfterMs1 = player.duration - commandToExecuteNow!!.timestampMs
         }
 
         when (val cmd = commandToExecuteNow) {
@@ -228,6 +231,7 @@ private fun PlaybackService.executeCommand(
         }
 
         updatePlaybackContent(msg)
+        player.play()
         schedulePauseThenResume(pauseAfterMs1, resumePlayingAfterMs1, msg, continueAfterResume = true)
     }
 }
@@ -263,7 +267,7 @@ internal fun PlaybackService.schedulePauseThenResume(
     continueAfterResume: Boolean = true
 ) {
     val safePauseMs = pauseAfterMs.coerceAtLeast(1000L)
-    val safeResumeMs = resumeAfterMs.coerceAtLeast(0L)
+    val safeResumeMs = resumeAfterMs.coerceAtLeast(1000L)
 
     // cancel previous and create new token
     cancelScheduledPauseResume()

@@ -1,7 +1,14 @@
 package com.satya.musicplayer.activities
 
+import android.os.Bundle
 import com.simplemobiletools.commons.activities.BaseSimpleActivity
 import com.satya.musicplayer.R
+import com.simplemobiletools.commons.compose.extensions.DEVELOPER_PLAY_STORE_URL
+import com.simplemobiletools.commons.dialogs.ConfirmationDialog
+import com.simplemobiletools.commons.extensions.baseConfig
+import com.simplemobiletools.commons.extensions.getThemeId
+import com.simplemobiletools.commons.extensions.launchViewIntent
+import com.simplemobiletools.commons.extensions.random
 
 open class SimpleActivity : BaseSimpleActivity() {
     override fun getAppIconIDs() = arrayListOf(
@@ -25,6 +32,14 @@ open class SimpleActivity : BaseSimpleActivity() {
         R.mipmap.ic_launcher_blue_grey,
         R.mipmap.ic_launcher_grey_black
     )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        if (useDynamicTheme) {
+            setTheme(getThemeId(showTransparentTop = showTransparentTop))
+        }
+
+        super.onCreate(savedInstanceState)
+    }
 
     override fun getAppLauncherName() = getString(R.string.app_launcher_name)
 }
