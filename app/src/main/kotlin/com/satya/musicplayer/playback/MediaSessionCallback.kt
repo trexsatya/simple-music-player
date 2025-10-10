@@ -138,7 +138,10 @@ internal fun PlaybackService.getMediaSessionCallback() = object : MediaLibrarySe
             CustomCommands.TOGGLE_SKIP_SILENCE -> player.setSkipSilence(config.gaplessPlayback)
             CustomCommands.SET_SHUFFLE_ORDER -> setShuffleOrder(args)
             CustomCommands.SET_NEXT_ITEM -> Unit
-            CustomCommands.SEEK_RANDOM -> seekRandomOrPlayAnswer()
+            CustomCommands.SEEK_RANDOM -> {
+                cancelScheduledPauseResume()
+                seekRandomOrPlaySomeCommand()
+            }
             CustomCommands.REPLAY_LAST_RANDOM -> replayLastRandom()
         }
 

@@ -109,7 +109,12 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
             private set
         var playbackCommands: List<PlaybackCommand> = listOf()
         var questionBag = ShuffleBag<IndexedValue<PlaybackCommand>>(listOf())
-        var turnForQuestion = true
+        var answerBag = ShuffleBag<IndexedValue<PlaybackCommand>>(listOf())
+
+        /**
+         * part or counterpart: if part is ques, counterpart is answer and vice-versa
+         */
+        var turnForPart = true
 
         fun updatePlaybackInfo(player: Player) {
             currentMediaItem = player.currentMediaItem
@@ -117,19 +122,10 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
             isPlaying = player.isReallyPlaying
         }
 
-        fun getEffectivePlaybackCommands(): List<PlaybackCommand> {
-            if(GlobalData.questionAnswerSetting.value == 1) {
-                return playbackCommands.filter { !it.isAnswer() }
-            }
-            if(GlobalData.questionAnswerSetting.value == 2) {
-                return playbackCommands.filter { !it.isQuestion() }
-            }
-            return playbackCommands
-        }
-
         fun setPlaybackCommands(playbackFileContent: String) {
             playbackCommands = playbackFileContent.trimIndent().lines().mapNotNull { PlaybackCommand.from(it) }
             questionBag = ShuffleBag(playbackCommands.withIndex().toList().filter { it.value.isQuestion() })
+            answerBag = ShuffleBag(playbackCommands.withIndex().toList().filter { it.value.isAnswer() })
         }
     }
 }

@@ -51,6 +51,12 @@ import kotlin.math.min
 import kotlin.time.Duration.Companion.milliseconds
 
 
+private const val QUES_ANS_SETTING_KEY = "questionAnswerSetting"
+
+private const val PLAY_DURATION_SECONDS_KEY = "playDurationSeconds"
+
+private const val PAUSE_DURATION_SECONDS_KEY = "pauseDurationSeconds"
+
 class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
     private val SWIPE_DOWN_THRESHOLD = 100
 
@@ -69,9 +75,9 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         nextTrackPlaceholder = resources.getColoredDrawableWithColor(R.drawable.ic_headset, getProperTextColor())
+        sharedPreferences = getSharedPreferences("com.satya.musicplayer", Context.MODE_PRIVATE)
         setupButtons()
         setupFlingListener()
-        sharedPreferences = getSharedPreferences("com.satya.musicplayer", Context.MODE_PRIVATE)
         binding.apply {
             (activityTrackAppbar.layoutParams as ConstraintLayout.LayoutParams).topMargin = statusBarHeight
             activityTrackHolder.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
@@ -230,7 +236,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
             val defaultDuration = 10
             val savedPlayDurationIndex = durationValues.indexOfFirst {
                 it == (sharedPreferences?.getInt(
-                    "playDurationSeconds",
+                    PLAY_DURATION_SECONDS_KEY,
                     defaultDuration
                 ) ?: defaultDuration).toString() + "s"
             }
@@ -238,7 +244,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
             activityPauseDurationSecs.displayedValues = durationValues.toTypedArray()
             val savedPauseDurationIndex = durationValues.indexOfFirst {
                 it == (sharedPreferences?.getInt(
-                    "pauseDurationSeconds",
+                    PAUSE_DURATION_SECONDS_KEY,
                     defaultDuration
                 ) ?: defaultDuration).toString() + "s"
             }
@@ -250,19 +256,29 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
 
             activityPlayDurationSecs.setOnValueChangedListener { _: NumberPicker, _: Int, newValue: Int ->
                 updateGlobalValue(GlobalData.playDurationSeconds, newValue, activityPlayDurationSecs.displayedValues)
-                sharedPreferences?.edit()?.putInt("playDurationSeconds", newValue)?.apply()
+                sharedPreferences?.edit()?.putInt(PLAY_DURATION_SECONDS_KEY, newValue)?.apply()
             }
             activityPauseDurationSecs.setOnValueChangedListener { _: NumberPicker, _: Int, newValue: Int ->
                 updateGlobalValue(GlobalData.pauseDurationSeconds, newValue, activityPauseDurationSecs.displayedValues)
-                sharedPreferences?.edit()?.putInt("pauseDurationSeconds", newValue)?.apply()
+                sharedPreferences?.edit()?.putInt(PAUSE_DURATION_SECONDS_KEY, newValue)?.apply()
             }
 
+            val quesAnsValues = arrayOf("Ques-Ans", "Ans-Ques")
+            val defaultQuestionAnswerSetting = quesAnsValues[0]
+            val savedQuesAnsSetting = quesAnsValues.indexOfFirst {
+                it == (sharedPreferences?.getString(
+                    QUES_ANS_SETTING_KEY,
+                    defaultQuestionAnswerSetting
+                ) ?: defaultQuestionAnswerSetting).toString()
+            }
+            activityQuestionAnswerSetting.displayedValues = quesAnsValues
             activityQuestionAnswerSetting.minValue = 0
-            activityQuestionAnswerSetting.maxValue = 2
-            activityQuestionAnswerSetting.value = 0
-            activityQuestionAnswerSetting.displayedValues = arrayOf("Ques-Ans", "Ques-", "-Ans")
+            activityQuestionAnswerSetting.maxValue = activityQuestionAnswerSetting.displayedValues.size - 1
+            activityQuestionAnswerSetting.value = savedQuesAnsSetting
+            GlobalData.questionAnswerSetting.value = savedQuesAnsSetting;
             activityQuestionAnswerSetting.setOnValueChangedListener { _: NumberPicker, _: Int, newValue: Int ->
                 GlobalData.questionAnswerSetting.postValue(newValue)
+                sharedPreferences?.edit()?.putString(QUES_ANS_SETTING_KEY, quesAnsValues[newValue])?.apply()
             }
 
             activityTrackReplayRandom.setOnClickListener {
@@ -559,9 +575,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         withPlayer {
             setupTrackInfo(currentMediaItem)
             setupNextTrackInfo(nextMediaItem)
-            maybeSeekRandom()
             PlaybackService.playbackCommands = listOf()
-            PlaybackService.turnForQuestion = true
             val track = this.currentMediaItem?.toTrack()
             val id = track?.id
             if (id != null) {
@@ -570,10 +584,16 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
                         if (playbackFile.isNotEmpty()) {
                             GlobalData.playbackFileName.postValue("<from db>")
                             setPlaybackCommands(playbackFile.trimIndent())
-                            maybeSeekRandom()
+                            //TODO: Handle other possibilities
+                            if(GlobalData.questionAnswerSetting.value == 0) {
+                                PlaybackService.turnForPart = true
+                            } else {
+                                PlaybackService.turnForPart = false
+                            }
                         } else {
                             GlobalData.playbackFileName.postValue("[Playback File]")
                         }
+                        maybeSeekRandom()
                     }
                 }
             }
