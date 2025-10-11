@@ -9,12 +9,14 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.util.Log
+import androidx.lifecycle.MutableLiveData
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaLibraryService
+import com.satya.musicplayer.FixedSizeQueue
 import com.satya.musicplayer.PlaybackCommand
 import com.satya.musicplayer.Utils
 import com.satya.musicplayer.activities.MainActivity
@@ -98,6 +100,15 @@ internal fun PlaybackService.mediaNextButtonClicked(player: SimpleMusicPlayer) {
     } else {
         rewind()
     }
+}
+
+internal fun PlaybackService.playSpecificCommand(index: Int) {
+    val (pauseAfterMs, resumePlayingAfterMs) = defaultDurations()
+    val commands = PlaybackService.playbackCommands
+    if(commands.isEmpty()) {
+        return
+    }
+    executeCommand(IndexedValue(index, commands[index]), commands, pauseAfterMs, resumePlayingAfterMs)
 }
 
 internal fun PlaybackService.replayLastRandom() {
@@ -239,7 +250,40 @@ private fun PlaybackService.executeCommand(
         updatePlaybackContent(msg)
         player.play()
         schedulePauseThenResume(pauseAfterMs1, resumePlayingAfterMs1, msg, continueAfterResume = true)
+        GlobalData.commandHistory.removeItem(random)
+        GlobalData.commandHistory.addItem(random)
     }
+}
+
+private fun <T> MutableLiveData<FixedSizeQueue<T>>.addItem(item: T) {
+    val oldQueue = value
+    val maxSize = 20
+    val newQueue = if (oldQueue != null) {
+        FixedSizeQueue<T>(maxSize).apply {
+            oldQueue.toList().forEach { add(it) }
+            add(item)
+        }
+    } else {
+        FixedSizeQueue<T>(maxSize).apply { add(item) }
+    }
+    postValue(newQueue)
+}
+
+private fun <T> MutableLiveData<FixedSizeQueue<T>>.removeItem(item: T) {
+    val oldQueue = value
+    val maxSize = 20
+    val newQueue = if (oldQueue != null) {
+        FixedSizeQueue<T>(maxSize).apply {
+            oldQueue.toList().forEach {
+                if(it?.equals(item) == false) {
+                    add(it)
+                }
+            }
+        }
+    } else {
+        FixedSizeQueue<T>(maxSize)
+    }
+    postValue(newQueue)
 }
 
 private fun questionAnswerEnabled() = GlobalData.questionAnswerSetting.value != null

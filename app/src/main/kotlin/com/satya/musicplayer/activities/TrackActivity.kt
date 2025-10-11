@@ -18,9 +18,12 @@ import android.util.Size
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
+import android.view.View.INVISIBLE
+import android.view.View.VISIBLE
 import android.widget.NumberPicker
 import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.ToggleButton
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.os.bundleOf
 import androidx.core.os.postDelayed
@@ -127,12 +130,42 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         GlobalData.playbackCountdown.observe(this) { text ->
             binding.activityCountdownLabel.text = text
         }
-        binding.activityPlaybackFileEnableBtn.setOnCheckedChangeListener { _, checked ->
+
+        GlobalData.commandHistory.observe(this) { updateCommandHistoryList() }
+
+        setupSettingsOverlay()
+        findViewById<ToggleButton>(R.id.activity_playback_file_enable_btn)
+        findViewById<ToggleButton>(R.id.activity_playback_file_enable_btn)?.setOnCheckedChangeListener { _, checked ->
             GlobalData.playbackFileEnabled.postValue(checked)
         }
 
-        binding.activityRandomSeekToggle.setOnCheckedChangeListener { _, checked ->
+        findViewById<ToggleButton>(R.id.activity_random_seek_toggle)?.setOnCheckedChangeListener { _, checked ->
             GlobalData.randomSeekEnabled.postValue(checked)
+        }
+    }
+
+    private var isOverlayVisible = false
+    private fun setupSettingsOverlay() {
+        val overlay = findViewById<View>(R.id.playback_file_overlay)
+        val settingsButton = findViewById<View>(R.id.activity_playback_settings) // your chosen button
+
+        settingsButton.setOnClickListener {
+            if (isOverlayVisible) {
+                overlay.animate()
+                    .translationY(overlay.height.toFloat())
+                    .alpha(0f)
+                    .setDuration(300)
+                    .withEndAction { overlay.visibility = View.GONE }
+                    .start()
+            } else {
+                overlay.visibility = View.VISIBLE
+                overlay.animate()
+                    .translationY(0f)
+                    .alpha(1f)
+                    .setDuration(300)
+                    .start()
+            }
+            isOverlayVisible = !isOverlayVisible
         }
     }
 
@@ -227,12 +260,13 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
             activityTrackPrevious.setOnClickListener { withPlayer { forceSeekToPrevious() } }
             activityTrackPlayPause.setOnClickListener { togglePlayback() }
             activityTrackNext.setOnClickListener { withPlayer { forceSeekToNext() } }
-            activityPlayDurationSecs.minValue = 0
-            activityPlayDurationSecs.maxValue = durationValues.size - 1
-            activityPauseDurationSecs.minValue = 0
-            activityPauseDurationSecs.maxValue = durationValues.size - 1
 
-            activityPlayDurationSecs.displayedValues = durationValues.toTypedArray()
+            playbackFileContainer.activityPlayDurationSecs.minValue = 0
+            playbackFileContainer.activityPlayDurationSecs.maxValue = durationValues.size - 1
+            playbackFileContainer.activityPauseDurationSecs.minValue = 0
+            playbackFileContainer.activityPauseDurationSecs.maxValue = durationValues.size - 1
+
+            playbackFileContainer.activityPlayDurationSecs.displayedValues = durationValues.toTypedArray()
             val defaultDuration = 10
             val savedPlayDurationIndex = durationValues.indexOfFirst {
                 it == (sharedPreferences?.getInt(
@@ -240,26 +274,26 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
                     defaultDuration
                 ) ?: defaultDuration).toString() + "s"
             }
-            activityPlayDurationSecs.value = savedPlayDurationIndex.coerceAtLeast(0)
-            activityPauseDurationSecs.displayedValues = durationValues.toTypedArray()
+            playbackFileContainer.activityPlayDurationSecs.value = savedPlayDurationIndex.coerceAtLeast(0)
+            playbackFileContainer.activityPauseDurationSecs.displayedValues = durationValues.toTypedArray()
             val savedPauseDurationIndex = durationValues.indexOfFirst {
                 it == (sharedPreferences?.getInt(
                     PAUSE_DURATION_SECONDS_KEY,
                     defaultDuration
                 ) ?: defaultDuration).toString() + "s"
             }
-            activityPauseDurationSecs.value = savedPauseDurationIndex.coerceAtLeast(0)
+            playbackFileContainer.activityPauseDurationSecs.value = savedPauseDurationIndex.coerceAtLeast(0)
 
             //Initial values
-            updateGlobalValue(GlobalData.playDurationSeconds, activityPlayDurationSecs.value, activityPlayDurationSecs.displayedValues)
-            updateGlobalValue(GlobalData.pauseDurationSeconds, activityPauseDurationSecs.value, activityPauseDurationSecs.displayedValues)
+            updateGlobalValue(GlobalData.playDurationSeconds, playbackFileContainer.activityPlayDurationSecs.value, playbackFileContainer.activityPlayDurationSecs.displayedValues)
+            updateGlobalValue(GlobalData.pauseDurationSeconds, playbackFileContainer.activityPauseDurationSecs.value, playbackFileContainer.activityPauseDurationSecs.displayedValues)
 
-            activityPlayDurationSecs.setOnValueChangedListener { _: NumberPicker, _: Int, newValue: Int ->
-                updateGlobalValue(GlobalData.playDurationSeconds, newValue, activityPlayDurationSecs.displayedValues)
+            playbackFileContainer.activityPlayDurationSecs.setOnValueChangedListener { _: NumberPicker, _: Int, newValue: Int ->
+                updateGlobalValue(GlobalData.playDurationSeconds, newValue, playbackFileContainer.activityPlayDurationSecs.displayedValues)
                 sharedPreferences?.edit()?.putInt(PLAY_DURATION_SECONDS_KEY, newValue)?.apply()
             }
-            activityPauseDurationSecs.setOnValueChangedListener { _: NumberPicker, _: Int, newValue: Int ->
-                updateGlobalValue(GlobalData.pauseDurationSeconds, newValue, activityPauseDurationSecs.displayedValues)
+            playbackFileContainer.activityPauseDurationSecs.setOnValueChangedListener { _: NumberPicker, _: Int, newValue: Int ->
+                updateGlobalValue(GlobalData.pauseDurationSeconds, newValue, playbackFileContainer.activityPauseDurationSecs.displayedValues)
                 sharedPreferences?.edit()?.putInt(PAUSE_DURATION_SECONDS_KEY, newValue)?.apply()
             }
 
@@ -271,12 +305,12 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
                     defaultQuestionAnswerSetting
                 ) ?: defaultQuestionAnswerSetting).toString()
             }
-            activityQuestionAnswerSetting.displayedValues = quesAnsValues
-            activityQuestionAnswerSetting.minValue = 0
-            activityQuestionAnswerSetting.maxValue = activityQuestionAnswerSetting.displayedValues.size - 1
-            activityQuestionAnswerSetting.value = savedQuesAnsSetting
+            playbackFileContainer.activityQuestionAnswerSetting.displayedValues = quesAnsValues
+            playbackFileContainer.activityQuestionAnswerSetting.minValue = 0
+            playbackFileContainer.activityQuestionAnswerSetting.maxValue = playbackFileContainer.activityQuestionAnswerSetting.displayedValues.size - 1
+            playbackFileContainer.activityQuestionAnswerSetting.value = savedQuesAnsSetting
             GlobalData.questionAnswerSetting.value = savedQuesAnsSetting;
-            activityQuestionAnswerSetting.setOnValueChangedListener { _: NumberPicker, _: Int, newValue: Int ->
+            playbackFileContainer.activityQuestionAnswerSetting.setOnValueChangedListener { _: NumberPicker, _: Int, newValue: Int ->
                 GlobalData.questionAnswerSetting.postValue(newValue)
                 sharedPreferences?.edit()?.putString(QUES_ANS_SETTING_KEY, quesAnsValues[newValue])?.apply()
             }
@@ -289,11 +323,27 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
                     )
                 }
             }
+
+            updateCommandHistoryList()
+
+            activityPlaySpecificCommand.setOnClickListener {
+                val list = GlobalData.commandHistory.value?.toList()
+                val selected = list?.get(activityPlaybackCommandItems.value)
+                selected?.let {
+                    withPlayer {
+                        sendCommand(
+                            command = CustomCommands.PLAY_COMMAND,
+                            extras = bundleOf("index" to selected.index)
+                        )
+                    }
+                }
+            }
+
             activityTrackProgressCurrent.setOnClickListener { seekBack() }
             activityTrackProgressMax.setOnClickListener { seekForward() }
             activityTrackPlaybackSetting.setOnClickListener { togglePlaybackSetting() }
             activityTrackSpeedClickArea.setOnClickListener { showPlaybackSpeedPicker() }
-            activityTrackPlaybackControlFileBtn.setOnClickListener { openFilePicker() }
+            playbackFileContainer.activityTrackPlaybackControlFileBtn.setOnClickListener { openFilePicker() }
             setupShuffleButton()
             setupPlaybackSettingButton()
             setupSeekbar()
@@ -302,6 +352,42 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
                 it.applyColorFilter(getProperTextColor())
             }
         }
+    }
+
+    private fun updateCommandHistoryList(): ActivityTrackBinding {
+        val b = binding
+        val snapshot = GlobalData.commandHistory.value?.toList() ?: emptyList()
+
+        b.root.post {
+            val picker = b.activityPlaybackCommandItems
+
+            // Reset displayedValues first to avoid old array reference crash
+            picker.displayedValues = null
+
+            if (snapshot.isNotEmpty()) {
+                val displayed = snapshot.map { it.value.text.take(20) + "..." }.toTypedArray()
+
+                picker.minValue = 0
+                picker.maxValue = displayed.size - 1
+                picker.displayedValues = displayed
+
+                picker.value = (displayed.size - 1).coerceIn(picker.minValue, picker.maxValue)
+
+                b.activityPlaySpecificCommand.visibility = VISIBLE
+            } else {
+                // Fallback for empty list: single placeholder
+                val placeholder = arrayOf("No commands")
+
+                picker.minValue = 0
+                picker.maxValue = 0
+                picker.displayedValues = placeholder
+                picker.value = 0
+
+                b.activityPlaySpecificCommand.visibility = INVISIBLE
+            }
+        }
+
+        return b
     }
 
     private fun updateGlobalValue(value: MutableLiveData<Int>, idx: Int, displayedValues: Array<String>): Int {

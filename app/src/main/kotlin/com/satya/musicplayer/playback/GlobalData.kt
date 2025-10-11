@@ -1,6 +1,8 @@
 package com.satya.musicplayer.playback
 
 import androidx.lifecycle.MutableLiveData
+import com.satya.musicplayer.FixedSizeQueue
+import com.satya.musicplayer.PlaybackCommand
 
 object GlobalData {
     val playbackCountdown = MutableLiveData("")
@@ -12,4 +14,5 @@ object GlobalData {
     val playDurationSeconds = MutableLiveData(30)
     val manualPlayPause = MutableLiveData(false)
     val questionAnswerSetting = MutableLiveData(0)
+    var commandHistory = MutableLiveData(FixedSizeQueue<IndexedValue<PlaybackCommand>>(20))
 }

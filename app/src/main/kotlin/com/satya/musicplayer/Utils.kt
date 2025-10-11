@@ -14,22 +14,34 @@ import java.io.InputStreamReader
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-sealed class PlaybackCommand(val timestampMs: Long, val text: String) {
-    override fun toString(): String {
-        return "Cmd: $text"
-    }
-    fun isAnswer(): Boolean {
-        return text.contains("__ANSWER__")
-    }
+sealed class PlaybackCommand(open val timestampMs: Long, open val text: String) {
+    fun isAnswer() = text.contains("__ANSWER__")
+    fun isQuestion() = text.contains("__QUESTION__")
 
-    fun isQuestion(): Boolean {
-        return text.contains("__QUESTION__")
-    }
+    data class Stop(
+        override val timestampMs: Long,
+        val durationMs: Long,
+        val message: String,
+        override val text: String
+    ) : PlaybackCommand(timestampMs, text)
 
-    class Stop(timestampMs: Long, val durationMs: Long, val message: String, text: String) : PlaybackCommand(timestampMs, text)
-    class Jump(timestampMs: Long, val targetMs: Long, text: String) : PlaybackCommand(timestampMs, text)
-    class Repeat(timestampMs: Long, val repeatCount: Int, text: String) : PlaybackCommand(timestampMs, text)
-    class ShowMessage(timestampMs: Long, val message: String, text: String) : PlaybackCommand(timestampMs, text)
+    data class Jump(
+        override val timestampMs: Long,
+        val targetMs: Long,
+        override val text: String
+    ) : PlaybackCommand(timestampMs, text)
+
+    data class Repeat(
+        override val timestampMs: Long,
+        val repeatCount: Int,
+        override val text: String
+    ) : PlaybackCommand(timestampMs, text)
+
+    data class ShowMessage(
+        override val timestampMs: Long,
+        val message: String,
+        override val text: String
+    ) : PlaybackCommand(timestampMs, text)
 
     companion object {
         fun from(line: String): PlaybackCommand? {
@@ -45,6 +57,7 @@ sealed class PlaybackCommand(val timestampMs: Long, val text: String) {
         }
     }
 }
+
 
 class Utils {
     companion object {

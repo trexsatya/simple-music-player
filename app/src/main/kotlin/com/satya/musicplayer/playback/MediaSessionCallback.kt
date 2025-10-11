@@ -143,6 +143,9 @@ internal fun PlaybackService.getMediaSessionCallback() = object : MediaLibrarySe
                 seekRandomOrPlaySomeCommand()
             }
             CustomCommands.REPLAY_LAST_RANDOM -> replayLastRandom()
+            CustomCommands.PLAY_COMMAND -> {
+                playSpecificCommand(args.getInt("index"))
+            }
         }
 
         return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
