@@ -139,10 +139,9 @@ internal fun PlaybackService.getMediaSessionCallback() = object : MediaLibrarySe
             CustomCommands.SET_SHUFFLE_ORDER -> setShuffleOrder(args)
             CustomCommands.SET_NEXT_ITEM -> Unit
             CustomCommands.SEEK_RANDOM -> {
-                cancelScheduledPauseResume()
                 seekRandomOrPlaySomeCommand()
             }
-            CustomCommands.REPLAY_LAST_RANDOM -> replayLastRandom()
+            CustomCommands.REPLAY_LAST_RANDOM -> {}
             CustomCommands.PLAY_COMMAND -> {
                 playSpecificCommand(args.getInt("index"))
             }

@@ -104,14 +104,16 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/activity_track_progressbar" />
 
-            <Button
-                android:id="@+id/activity_track_replay_random"
+            <ToggleButton
+                android:id="@+id/activity_playback_file_repeat_command"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="RPL"
+                android:checked="true"
+                android:textOff="REP OFF"
+                android:textOn="REP ON"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintLeft_toRightOf="@id/activity_track_artist"
-                app:layout_constraintTop_toTopOf="@id/activity_track_artist"/>
+                app:layout_constraintTop_toTopOf="@id/activity_track_artist" />
 
             <com.simplemobiletools.commons.views.MyTextView
                 android:id="@+id/activity_track_speed"

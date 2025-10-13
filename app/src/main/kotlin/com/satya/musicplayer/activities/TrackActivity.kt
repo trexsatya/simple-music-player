@@ -131,7 +131,9 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
             binding.activityCountdownLabel.text = text
         }
 
-        GlobalData.commandHistory.observe(this) { updateCommandHistoryList() }
+        GlobalData.lastPlaybackCommandIndex.observe(this) { index ->
+            binding.activityPlaybackCommandItems.value = index ?: 0
+        }
 
         setupSettingsOverlay()
         findViewById<ToggleButton>(R.id.activity_playback_file_enable_btn)
@@ -141,6 +143,10 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
 
         findViewById<ToggleButton>(R.id.activity_random_seek_toggle)?.setOnCheckedChangeListener { _, checked ->
             GlobalData.randomSeekEnabled.postValue(checked)
+        }
+
+        binding.activityPlaybackFileRepeatCommand.setOnCheckedChangeListener {_, checked ->
+            GlobalData.repeatCommandEnabled.postValue(checked)
         }
     }
 
@@ -315,29 +321,17 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
                 sharedPreferences?.edit()?.putString(QUES_ANS_SETTING_KEY, quesAnsValues[newValue])?.apply()
             }
 
-            activityTrackReplayRandom.setOnClickListener {
+            activityPlaySpecificCommand.setOnClickListener {
+                val selected = activityPlaybackCommandItems.value
                 withPlayer {
                     sendCommand(
-                        command = CustomCommands.REPLAY_LAST_RANDOM,
-                        extras = bundleOf("NOT_REQUIRED" to "_")
+                        command = CustomCommands.PLAY_COMMAND,
+                        extras = bundleOf("index" to selected)
                     )
                 }
             }
 
-            updateCommandHistoryList()
-
-            activityPlaySpecificCommand.setOnClickListener {
-                val list = GlobalData.commandHistory.value?.toList()
-                val selected = list?.get(activityPlaybackCommandItems.value)
-                selected?.let {
-                    withPlayer {
-                        sendCommand(
-                            command = CustomCommands.PLAY_COMMAND,
-                            extras = bundleOf("index" to selected.index)
-                        )
-                    }
-                }
-            }
+            activityPlaybackFileRepeatCommand.isChecked = GlobalData.repeatCommandEnabled.value == true
 
             activityTrackProgressCurrent.setOnClickListener { seekBack() }
             activityTrackProgressMax.setOnClickListener { seekForward() }
@@ -354,9 +348,9 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         }
     }
 
-    private fun updateCommandHistoryList(): ActivityTrackBinding {
+    private fun updatePlaybackCommandList(): ActivityTrackBinding {
         val b = binding
-        val snapshot = GlobalData.commandHistory.value?.toList() ?: emptyList()
+        val snapshot = PlaybackService.playbackCommands.toList()
 
         b.root.post {
             val picker = b.activityPlaybackCommandItems
@@ -365,7 +359,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
             picker.displayedValues = null
 
             if (snapshot.isNotEmpty()) {
-                val displayed = snapshot.map { it.value.text.take(20) + "..." }.toTypedArray()
+                val displayed = snapshot.map { it.text.take(40) + "..." }.toTypedArray()
 
                 picker.minValue = 0
                 picker.maxValue = displayed.size - 1
@@ -545,7 +539,11 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         try {
             val playbackFileContent = readTextFromUri(this, p)
             if (playbackFileContent.isNotEmpty()) {
-                setPlaybackCommands(playbackFileContent)
+                setPlaybackCommands(playbackFileContent) {
+                    runOnUiThread {
+                        updatePlaybackCommandList()
+                    }
+                }
             }
 
             val ah = this.audioHelper
@@ -669,7 +667,11 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
                     ensureBackgroundThread {
                         if (playbackFile.isNotEmpty()) {
                             GlobalData.playbackFileName.postValue("<from db>")
-                            setPlaybackCommands(playbackFile.trimIndent())
+                            setPlaybackCommands(playbackFile.trimIndent()) {
+                                runOnUiThread {
+                                    updatePlaybackCommandList()
+                                }
+                            }
                             //TODO: Handle other possibilities
                             if(GlobalData.questionAnswerSetting.value == 0) {
                                 PlaybackService.turnForPart = true

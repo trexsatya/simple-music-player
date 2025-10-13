@@ -94,12 +94,7 @@ private fun updatePlaybackContent(txt: String) {
 }
 
 internal fun PlaybackService.mediaNextButtonClicked(player: SimpleMusicPlayer) {
-    val enabled = GlobalData.playbackFileEnabled.value ?: false
-    if (enabled && previousRandomPlaybackCommand != null) {
-        replayLastRandom()
-    } else {
-        rewind()
-    }
+    rewind()
 }
 
 internal fun PlaybackService.playSpecificCommand(index: Int) {
@@ -108,41 +103,24 @@ internal fun PlaybackService.playSpecificCommand(index: Int) {
     if(commands.isEmpty()) {
         return
     }
-    executeCommand(IndexedValue(index, commands[index]), commands, pauseAfterMs, resumePlayingAfterMs)
-}
-
-internal fun PlaybackService.replayLastRandom() {
-    val pauseAfterMs = (GlobalData.playDurationSeconds.value ?: defaultStopIntervalMs).toLong() * 1000
-    val resumePlayingAfterMs = (GlobalData.pauseDurationSeconds.value ?: defaultStopIntervalMs).toLong() * 1000
-    val commands = PlaybackService.playbackCommands
-    if(commands.isNotEmpty()) {
-        previousRandomPlaybackCommand?.let {
-            executeCommand(it, commands, pauseAfterMs, resumePlayingAfterMs)
-        }
-    } else {
-        lastRandomPosition?.let {
-            val msg = "Replaying last random ${Utils.formatMillis(it)}"
-            withPlayer {
-                player.seekTo(it)
-                player.play()
-                updatePlaybackContent(msg)
-            }
-            schedulePauseThenResume(pauseAfterMs, resumePlayingAfterMs, msg, continueAfterResume = true)
-        }
+    val command = commands[index]
+    executeCommand(IndexedValue(index, command), commands, pauseAfterMs, resumePlayingAfterMs)
+    if(!PlaybackService.turnForPart) {
+        GlobalData.lastPlaybackCommandIndex.postValue(index)
+        previousPlaybackCommand = IndexedValue(index, command)
     }
 }
 
 internal fun PlaybackService.seekRandomOrPlaySomeCommand() {
+    cancelScheduledPauseResume()
     waitForDurationAndRun {
         if(!questionAnswerEnabled()) {
             seekRandomInternalOrRandomPart()
         } else {
             if(PlaybackService.turnForPart) {
                 seekRandomInternalOrRandomPart()
-                PlaybackService.turnForPart = false
             } else {
-                playCounterpart(previousRandomPlaybackCommand)
-                PlaybackService.turnForPart = true
+                playCounterpart(previousPlaybackCommand)
             }
         }
     }
@@ -160,13 +138,13 @@ fun PlaybackService.playCounterpart(command: IndexedValue<PlaybackCommand>?) {
     Log.d("PlaybackService", "Prev cmd: $command")
     val (pauseAfterMs, resumePlayingAfterMs) = defaultDurations()
     val commands = PlaybackService.playbackCommands
-    if(previousRandomPlaybackCommand == null) {
+    if(previousPlaybackCommand == null) {
         Log.d("PlaybackService", "Prev cmd: $command. Falling back to random.")
         PlaybackService.turnForPart = true
         seekRandomInternalOrRandomPart()
         return
     }
-    previousRandomPlaybackCommand?.let {
+    previousPlaybackCommand?.let {
         var index = it.index + 1
         // Part was answer, we need to play now the question
         if (GlobalData.questionAnswerSetting.value == 1) {
@@ -193,10 +171,16 @@ private fun PlaybackService.seekRandomInternalOrRandomPart() {
             schedulePauseThenResume(pauseAfterMs, resumePlayingAfterMs, msg, continueAfterResume = true)
         }
     } else {
-        //TODO: Extend with other options
-        val random =  if(GlobalData.questionAnswerSetting.value == 0) PlaybackService.questionBag.next() else PlaybackService.answerBag.next()
-        executeCommand(random, commands, pauseAfterMs, resumePlayingAfterMs)
-        previousRandomPlaybackCommand = random
+        if(GlobalData.repeatCommandEnabled.value == true && GlobalData.lastPlaybackCommandIndex.value != null) {
+            val index = GlobalData.lastPlaybackCommandIndex.value?.coerceAtLeast(0) ?: 0
+            executeCommand(IndexedValue(index, commands[index]), commands, pauseAfterMs, resumePlayingAfterMs)
+        } else {
+            //TODO: Extend with other options
+            val random =  if(GlobalData.questionAnswerSetting.value == 0) PlaybackService.questionBag.next() else PlaybackService.answerBag.next()
+            executeCommand(random, commands, pauseAfterMs, resumePlayingAfterMs)
+            previousPlaybackCommand = random
+            GlobalData.lastPlaybackCommandIndex.postValue(random.index)
+        }
     }
 }
 
@@ -217,8 +201,9 @@ private fun PlaybackService.executeCommand(
     }
     var pauseAfterMs1 = pauseAfterMs
     var resumePlayingAfterMs1 = resumePlayingAfterMs
-    var nextCommand: PlaybackCommand? = null
+    var nextCommand: PlaybackCommand?
     var commandToExecuteNow: PlaybackCommand?
+    PlaybackService.updateTurn(random.value)
     withPlayer {
         commandToExecuteNow = random.value
         val nextIndex = random.index + 1
@@ -250,8 +235,6 @@ private fun PlaybackService.executeCommand(
         updatePlaybackContent(msg)
         player.play()
         schedulePauseThenResume(pauseAfterMs1, resumePlayingAfterMs1, msg, continueAfterResume = true)
-        GlobalData.commandHistory.removeItem(random)
-        GlobalData.commandHistory.addItem(random)
     }
 }
 

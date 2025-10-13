@@ -8,7 +8,6 @@ import androidx.core.os.postDelayed
 import androidx.media3.common.*
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.*
-import com.satya.musicplayer.FixedSizeQueue
 import com.satya.musicplayer.PlaybackCommand
 import com.simplemobiletools.commons.extensions.hasPermission
 import com.simplemobiletools.commons.extensions.showErrorToast
@@ -29,7 +28,7 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
     internal lateinit var mediaSession: MediaLibrarySession
     internal lateinit var mediaItemProvider: MediaItemProvider
 
-    internal var previousRandomPlaybackCommand: IndexedValue<PlaybackCommand>? = null
+    internal var previousPlaybackCommand: IndexedValue<PlaybackCommand>? = null
     internal var lastRandomPosition: Long? = null
     val defaultStopIntervalMs = 10_000L
     internal var currentRoot = ""
@@ -123,10 +122,21 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
             isPlaying = player.isReallyPlaying
         }
 
-        fun setPlaybackCommands(playbackFileContent: String) {
+        fun setPlaybackCommands(playbackFileContent: String, andThen: Runnable) {
             playbackCommands = playbackFileContent.trimIndent().lines().mapNotNull { PlaybackCommand.from(it) }
             questionBag = ShuffleBag(playbackCommands.withIndex().toList().filter { it.value.isQuestion() })
             answerBag = ShuffleBag(playbackCommands.withIndex().toList().filter { it.value.isAnswer() })
+            andThen.run()
+        }
+
+        fun updateTurn(commandPlayedNow: PlaybackCommand) {
+            var isPartPlayedNow = false
+            if(GlobalData.questionAnswerSetting.value == 0) {
+                isPartPlayedNow = commandPlayedNow.isQuestion()
+            } else {
+                isPartPlayedNow = commandPlayedNow.isAnswer()
+            }
+            turnForPart = !isPartPlayedNow
         }
     }
 }

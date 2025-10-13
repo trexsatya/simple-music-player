@@ -9,10 +9,11 @@ object GlobalData {
     val playbackFileContent = MutableLiveData("")
     val playbackFileName = MutableLiveData("[Playback File]")
     val playbackFileEnabled = MutableLiveData(true)
+    val lastPlaybackCommandIndex = MutableLiveData<Int>(null)
     val randomSeekEnabled = MutableLiveData(true)
+    val repeatCommandEnabled = MutableLiveData(true)
     val pauseDurationSeconds = MutableLiveData(50)
     val playDurationSeconds = MutableLiveData(30)
     val manualPlayPause = MutableLiveData(false)
     val questionAnswerSetting = MutableLiveData(0)
-    var commandHistory = MutableLiveData(FixedSizeQueue<IndexedValue<PlaybackCommand>>(20))
 }
