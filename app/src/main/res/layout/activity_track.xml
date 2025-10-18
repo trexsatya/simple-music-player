@@ -104,6 +104,14 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/activity_track_progressbar" />
 
+            <TextView
+                android:text="0"
+                android:id="@+id/activity_repeat_remaining"
+                app:layout_constraintRight_toLeftOf="@id/activity_playback_file_repeat_command"
+                app:layout_constraintBottom_toBottomOf="@id/activity_playback_file_repeat_command"
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"/>
+
             <ToggleButton
                 android:id="@+id/activity_playback_file_repeat_command"
                 android:layout_width="wrap_content"
@@ -114,6 +122,15 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintLeft_toRightOf="@id/activity_track_artist"
                 app:layout_constraintTop_toTopOf="@id/activity_track_artist" />
+
+            <Button
+                android:id="@+id/activity_track_piano_btn"
+                android:layout_width="wrap_content"
+                android:text="Piano"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/activity_track_toggle_shuffle"
+                app:layout_constraintTop_toTopOf="@id/activity_track_toggle_shuffle"
+                />
 
             <com.simplemobiletools.commons.views.MyTextView
                 android:id="@+id/activity_track_speed"
@@ -371,4 +388,33 @@
 
         <include layout="@layout/playback_file_cntnr_layout" android:id="@+id/playbackFileContainer"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Hidden overlay panel -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/piano_overlay"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:elevation="10dp"
+    android:visibility="gone"
+    android:padding="16dp">
+
+    <Button
+        android:id="@+id/close_piano_btn"
+        android:text="X"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <include
+        layout="@layout/piano_keyboard"
+        android:id="@+id/pianoKeyboardContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/close_piano_btn"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+</androidx.constraintlayout.widget.ConstraintLayout>
+
 </FrameLayout>

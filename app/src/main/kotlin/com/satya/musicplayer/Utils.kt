@@ -14,45 +14,41 @@ import java.io.InputStreamReader
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-sealed class PlaybackCommand(open val timestampMs: Long, open val text: String) {
+sealed class PlaybackCommand(
+    open val startTimeMs: Long,
+    open var endTimeMs: Long? = null,
+    open val text: String,
+    open val id: Int
+) {
     fun isAnswer() = text.contains("__ANSWER__")
     fun isQuestion() = text.contains("__QUESTION__")
 
-    data class Stop(
-        override val timestampMs: Long,
-        val durationMs: Long,
-        val message: String,
-        override val text: String
-    ) : PlaybackCommand(timestampMs, text)
-
-    data class Jump(
-        override val timestampMs: Long,
-        val targetMs: Long,
-        override val text: String
-    ) : PlaybackCommand(timestampMs, text)
-
-    data class Repeat(
-        override val timestampMs: Long,
-        val repeatCount: Int,
-        override val text: String
-    ) : PlaybackCommand(timestampMs, text)
-
     data class ShowMessage(
-        override val timestampMs: Long,
+        override val startTimeMs: Long,
         val message: String,
-        override val text: String
-    ) : PlaybackCommand(timestampMs, text)
+        override val text: String,
+        override var endTimeMs: Long? = null,
+        override val id: Int
+    ) : PlaybackCommand(startTimeMs, endTimeMs, text, id)
 
     companion object {
-        fun from(line: String): PlaybackCommand? {
+        fun from(line: String, id: Int): PlaybackCommand? {
             val timestamp = parseTimestampCommands(line) ?: return null
-            val duration = extractFlexibleTimestamp(timestamp.second)?.let { parseTimestamp(it) }?.let { toMilliSeconds(it) }
             val timestampMs = timestamp.first.toLong()
-            return when {
-                timestamp.second.trim().lowercase().startsWith("stop") -> {
-                    Stop(timestampMs, duration?.toLong() ?: ((GlobalData.pauseDurationSeconds.value ?: 30) * 1000L), timestamp.second, line)
+            return ShowMessage(timestampMs, timestamp.second, line, null, id)
+        }
+
+        /**
+         * Builds a list of commands and assigns `endTimeMs` = startTimeMs of the next command
+         */
+        fun buildListWithEndTimes(lines: List<String>): List<PlaybackCommand> {
+            var id = 0
+            val commands = lines.mapNotNull { from(it, id++) }
+            return commands.mapIndexed { index, cmd ->
+                val nextStart = commands.getOrNull(index + 1)?.startTimeMs
+                when (cmd) {
+                    is ShowMessage -> cmd.copy(endTimeMs = nextStart)
                 }
-                else -> ShowMessage(timestampMs, timestamp.second, line)
             }
         }
     }
@@ -61,6 +57,9 @@ sealed class PlaybackCommand(open val timestampMs: Long, open val text: String) 
 
 class Utils {
     companion object {
+
+        fun stringToIntsSet(str: String) = str.split(",").filterNot { it.isEmpty() }.map { it.toInt() }.toSet()
+
         @Throws(IOException::class)
         fun readTextFromUri(context: Context, uri: Uri?): String {
             val sb = StringBuilder()

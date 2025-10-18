@@ -18,12 +18,10 @@ import android.util.Size
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
+import android.view.View.GONE
 import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
-import android.widget.NumberPicker
-import android.widget.SeekBar
-import android.widget.TextView
-import android.widget.ToggleButton
+import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.os.bundleOf
 import androidx.core.os.postDelayed
@@ -33,7 +31,9 @@ import androidx.media3.common.MediaItem
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
+import com.satya.musicplayer.PianoSoundManager
 import com.satya.musicplayer.R
+import com.satya.musicplayer.Utils
 import com.satya.musicplayer.Utils.Companion.readTextFromUri
 import com.satya.musicplayer.databinding.ActivityTrackBinding
 import com.satya.musicplayer.extensions.*
@@ -42,10 +42,14 @@ import com.satya.musicplayer.helpers.PlaybackSetting
 import com.satya.musicplayer.helpers.SEEK_INTERVAL_S
 import com.satya.musicplayer.interfaces.PlaybackSpeedListener
 import com.satya.musicplayer.models.Track
+import com.satya.musicplayer.piano.PianoDialogFragment
+import com.satya.musicplayer.piano.SoundManagerProvider
 import com.satya.musicplayer.playback.CustomCommands
+import com.satya.musicplayer.playback.DEFAULT_REPEAT_COUNT
 import com.satya.musicplayer.playback.GlobalData
 import com.satya.musicplayer.playback.PlaybackService
 import com.satya.musicplayer.playback.PlaybackService.Companion.setPlaybackCommands
+import com.satya.musicplayer.playback.player.ShuffleBag
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.MEDIUM_ALPHA
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
@@ -59,8 +63,12 @@ private const val QUES_ANS_SETTING_KEY = "questionAnswerSetting"
 private const val PLAY_DURATION_SECONDS_KEY = "playDurationSeconds"
 
 private const val PAUSE_DURATION_SECONDS_KEY = "pauseDurationSeconds"
+private const val PLAYED_COMMANDS_IDS_KEY = "playedCommandsIndices"
+private const val PLAYED_TRACK_ID_KEY = "playedTrackId"
 
-class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
+private const val ID_SPLITTER = " || "
+
+class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundManagerProvider {
     private val SWIPE_DOWN_THRESHOLD = 100
 
     private var isThirdPartyIntent = false
@@ -131,11 +139,15 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
             binding.activityCountdownLabel.text = text
         }
 
-        GlobalData.lastPlaybackCommandIndex.observe(this) { index ->
-            binding.activityPlaybackCommandItems.value = index ?: 0
+        GlobalData.currentlyPlayingQA.observe(this) { command ->
+            if(command?.part != null) {
+                val index = binding.activityPlaybackCommandItems.displayedValues?.indexOfFirst { getIdFromDisplayedValueOfCommandQa(it) == command.id.toString() }?.coerceAtLeast(0)
+                binding.activityPlaybackCommandItems.value = index ?: 0
+            }
         }
 
         setupSettingsOverlay()
+        setupPianoOverlay()
         findViewById<ToggleButton>(R.id.activity_playback_file_enable_btn)
         findViewById<ToggleButton>(R.id.activity_playback_file_enable_btn)?.setOnCheckedChangeListener { _, checked ->
             GlobalData.playbackFileEnabled.postValue(checked)
@@ -145,9 +157,56 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
             GlobalData.randomSeekEnabled.postValue(checked)
         }
 
-        binding.activityPlaybackFileRepeatCommand.setOnCheckedChangeListener {_, checked ->
+        binding.activityPlaybackFileRepeatCommand.setOnCheckedChangeListener { _, checked ->
             GlobalData.repeatCommandEnabled.postValue(checked)
+            if(checked) {
+                binding.activityRepeatRemaining.visibility = VISIBLE
+            } else {
+                binding.activityRepeatRemaining.visibility = GONE
+            }
         }
+
+        GlobalData.repeatRemaining.observe(this) {
+            binding.activityRepeatRemaining.text = String.format(it.toString())
+        }
+
+        GlobalData.playedQaCommandIds.observe(this) {
+            updatePlaybackCommandList()
+        }
+    }
+
+    private lateinit var soundManager: PianoSoundManager
+    private fun setupPianoOverlay() {
+        soundManager = PianoSoundManager(this)
+
+//        val upperContainer = findViewById<FrameLayout>(R.id.piano_upper_container)
+//        val lowerContainer = findViewById<FrameLayout>(R.id.piano_lower_container)
+
+//
+//        val upperPiano = PianoView(this, soundManager, startNote = 60, endNote = 84) // C4–C6
+//        val lowerPiano = PianoView(this, soundManager, startNote = 36, endNote = 60) // C2–C4
+//
+//        upperContainer.addView(upperPiano)
+//        lowerContainer.addView(lowerPiano)
+
+        val overlay = binding.pianoOverlay
+
+        binding.activityTrackPianoBtn.setOnClickListener {
+            showPiano()
+        }
+
+        binding.closePianoBtn.setOnClickListener {
+            binding.pianoOverlay.visibility = GONE
+        }
+    }
+
+    override val pianoSoundManager: PianoSoundManager by lazy {
+        PianoSoundManager(this)
+    }
+
+    private fun showPiano() {
+        val frag = PianoDialogFragment()
+        frag.show(supportFragmentManager, "piano_dialog")
     }
 
     private var isOverlayVisible = false
@@ -161,10 +220,10 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
                     .translationY(overlay.height.toFloat())
                     .alpha(0f)
                     .setDuration(300)
-                    .withEndAction { overlay.visibility = View.GONE }
+                    .withEndAction { overlay.visibility = GONE }
                     .start()
             } else {
-                overlay.visibility = View.VISIBLE
+                overlay.visibility = VISIBLE
                 overlay.animate()
                     .translationY(0f)
                     .alpha(1f)
@@ -198,11 +257,16 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         binding.activityTrackArtist.setTextColor(getProperTextColor())
         updatePlayerState()
         updateTrackInfo()
+        GlobalData.playedQaCommandIds.postValue(sharedPreferences?.getString(PLAYED_COMMANDS_IDS_KEY, ""))
+        GlobalData.playedTrackId.postValue(sharedPreferences?.getInt(PLAYED_TRACK_ID_KEY, -1))
     }
 
     override fun onPause() {
         super.onPause()
         cancelProgressUpdate()
+
+        sharedPreferences?.edit()?.putString(PLAYED_COMMANDS_IDS_KEY, GlobalData.playedQaCommandIds.value ?: "")?.apply()
+        sharedPreferences?.edit()?.putInt(PLAYED_TRACK_ID_KEY, GlobalData.playedTrackId.value ?: -1)?.apply()
     }
 
     override fun onStop() {
@@ -213,6 +277,8 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
     override fun onDestroy() {
         super.onDestroy()
         cancelProgressUpdate()
+        soundManager.release()
+
         if (isThirdPartyIntent && !isChangingConfigurations) {
             withPlayer {
                 if (!isReallyPlaying) {
@@ -291,8 +357,16 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
             playbackFileContainer.activityPauseDurationSecs.value = savedPauseDurationIndex.coerceAtLeast(0)
 
             //Initial values
-            updateGlobalValue(GlobalData.playDurationSeconds, playbackFileContainer.activityPlayDurationSecs.value, playbackFileContainer.activityPlayDurationSecs.displayedValues)
-            updateGlobalValue(GlobalData.pauseDurationSeconds, playbackFileContainer.activityPauseDurationSecs.value, playbackFileContainer.activityPauseDurationSecs.displayedValues)
+            updateGlobalValue(
+                GlobalData.playDurationSeconds,
+                playbackFileContainer.activityPlayDurationSecs.value,
+                playbackFileContainer.activityPlayDurationSecs.displayedValues
+            )
+            updateGlobalValue(
+                GlobalData.pauseDurationSeconds,
+                playbackFileContainer.activityPauseDurationSecs.value,
+                playbackFileContainer.activityPauseDurationSecs.displayedValues
+            )
 
             playbackFileContainer.activityPlayDurationSecs.setOnValueChangedListener { _: NumberPicker, _: Int, newValue: Int ->
                 updateGlobalValue(GlobalData.playDurationSeconds, newValue, playbackFileContainer.activityPlayDurationSecs.displayedValues)
@@ -323,10 +397,11 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
 
             activityPlaySpecificCommand.setOnClickListener {
                 val selected = activityPlaybackCommandItems.value
+                val idOfTheQA = getIdFromDisplayedValueOfCommandQa(activityPlaybackCommandItems.displayedValues[selected])
                 withPlayer {
                     sendCommand(
                         command = CustomCommands.PLAY_COMMAND,
-                        extras = bundleOf("index" to selected)
+                        extras = bundleOf("index" to idOfTheQA)
                     )
                 }
             }
@@ -342,15 +417,33 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
             setupPlaybackSettingButton()
             setupSeekbar()
 
+            val repeatCounts = listOf(DEFAULT_REPEAT_COUNT.toString(), "10", "15", "20", "100")
+            binding.playbackFileContainer.activityRepeatCount.minValue = 0
+            binding.playbackFileContainer.activityRepeatCount.maxValue = repeatCounts.size - 1
+            binding.playbackFileContainer.activityRepeatCount.displayedValues = repeatCounts.toTypedArray()
+            binding.playbackFileContainer.activityRepeatCount.setOnValueChangedListener {  _: NumberPicker, _: Int, newValue: Int ->
+                GlobalData.repeatCount.postValue(repeatCounts[newValue].toInt())
+            }
+            binding.playbackFileContainer.activityRepeatCount.value = 0
+
             arrayOf(activityTrackPrevious, activityTrackPlayPause, activityTrackNext).forEach {
                 it.applyColorFilter(getProperTextColor())
             }
         }
     }
 
+    private fun getIdFromDisplayedValueOfCommandQa(it: String) = it.split(ID_SPLITTER)[0]
+
     private fun updatePlaybackCommandList(): ActivityTrackBinding {
         val b = binding
-        val snapshot = PlaybackService.playbackCommands.toList()
+        var alreadyPlayed = Utils.stringToIntsSet(GlobalData.playedQaCommandIds.value ?: "")
+        withPlayer {
+            if(GlobalData.playedTrackId.value != currentMediaItem?.toTrack()?.trackId) {
+                alreadyPlayed = setOf()
+            }
+        }
+
+        val snapshot = PlaybackService.qaCommandList.toListInOriginalOrder().filterNot { it.id in alreadyPlayed }
 
         b.root.post {
             val picker = b.activityPlaybackCommandItems
@@ -359,13 +452,19 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
             picker.displayedValues = null
 
             if (snapshot.isNotEmpty()) {
-                val displayed = snapshot.map { it.text.take(40) + "..." }.toTypedArray()
+                val displayed = snapshot.filter { it.part != null }.map { it.id.toString() + ID_SPLITTER + it.part?.text?.take(40) + "..." }.toTypedArray()
 
                 picker.minValue = 0
                 picker.maxValue = displayed.size - 1
                 picker.displayedValues = displayed
 
                 picker.value = (displayed.size - 1).coerceIn(picker.minValue, picker.maxValue)
+                GlobalData.currentlyPlayingQA.value?.let {
+                    val idx = displayed.map { getIdFromDisplayedValueOfCommandQa(it) }.indexOfFirst { it == GlobalData.currentlyPlayingQA.value.toString() }
+                    if(idx >= 0) {
+                        picker.value = idx
+                    }
+                }
 
                 b.activityPlaySpecificCommand.visibility = VISIBLE
             } else {
@@ -659,9 +758,11 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
         withPlayer {
             setupTrackInfo(currentMediaItem)
             setupNextTrackInfo(nextMediaItem)
-            PlaybackService.playbackCommands = listOf()
+            PlaybackService.qaCommandList = ShuffleBag(listOf())
             val track = this.currentMediaItem?.toTrack()
             val id = track?.id
+            track?.trackId?.let {  GlobalData.playedTrackId.postValue(it) }
+
             if (id != null) {
                 ctx.audioHelper.getPlaybackControlFile(id) { playbackFile ->
                     ensureBackgroundThread {
@@ -673,7 +774,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener {
                                 }
                             }
                             //TODO: Handle other possibilities
-                            if(GlobalData.questionAnswerSetting.value == 0) {
+                            if (GlobalData.questionAnswerSetting.value == 0) {
                                 PlaybackService.turnForPart = true
                             } else {
                                 PlaybackService.turnForPart = false

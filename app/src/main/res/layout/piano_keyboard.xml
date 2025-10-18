@@ -1,0 +1,37 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/piano_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:background="#222">
+
+    <!-- Upper Keyboard -->
+    <FrameLayout
+        android:id="@+id/piano_upper_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- Lower Keyboard -->
+    <FrameLayout
+        android:id="@+id/piano_lower_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <!-- Pedal -->
+    <ImageView
+        android:id="@+id/pedal_view"
+        android:layout_width="120dp"
+        android:layout_height="50dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="16dp"
+        android:src="@drawable/pedal_shape"
+        android:contentDescription="@string/sustain_pedal"
+        android:clickable="true"
+        android:focusable="true" />
+</LinearLayout>

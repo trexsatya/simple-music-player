@@ -20,16 +20,16 @@ import com.satya.musicplayer.FixedSizeQueue
 import com.satya.musicplayer.PlaybackCommand
 import com.satya.musicplayer.Utils
 import com.satya.musicplayer.activities.MainActivity
-import com.satya.musicplayer.extensions.broadcastUpdateWidgetState
-import com.satya.musicplayer.extensions.config
-import com.satya.musicplayer.extensions.currentMediaItems
-import com.satya.musicplayer.extensions.setRepeatMode
+import com.satya.musicplayer.extensions.*
 import com.satya.musicplayer.helpers.SEEK_INTERVAL_MS
 import com.satya.musicplayer.playback.*
 import com.satya.musicplayer.playback.GlobalData.manualPlayPause
+import com.satya.musicplayer.playback.PlaybackService.Companion.getRandomCommandToPlayNext
 import com.satya.musicplayer.playback.PlaybackService.Companion.updatePlaybackInfo
 import com.satya.musicplayer.playback.getCustomLayout
 import com.satya.musicplayer.playback.getMediaSessionCallback
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import java.time.Instant
 
 private const val PLAYER_THREAD = "PlayerThread"
@@ -64,7 +64,7 @@ internal fun PlaybackService.initializeSessionAndPlayer(handleAudioFocus: Boolea
                         scheduler.post { seekRandomOrPlaySomeCommand() }
                     } else {
                         // Auto-resume from scheduler -> do nothing extra
-                        Log.d("PlaybackService", "Auto-resume -> continuing cycle")
+                        //Log.d("PlaybackService", "Auto-resume -> continuing cycle")
                     }
                 } else if (manualPlayPause.value == true) {
                     // Manual pause (user) cancels cycle
@@ -97,27 +97,32 @@ internal fun PlaybackService.mediaNextButtonClicked(player: SimpleMusicPlayer) {
     rewind()
 }
 
-internal fun PlaybackService.playSpecificCommand(index: Int) {
+var repeatedCount = 0
+internal fun PlaybackService.playSpecificCommand(id: Int) {
     val (pauseAfterMs, resumePlayingAfterMs) = defaultDurations()
-    val commands = PlaybackService.playbackCommands
-    if(commands.isEmpty()) {
+
+    val commands = PlaybackService.qaCommandList.toListInOriginalOrder()
+    if (commands.isEmpty()) {
         return
     }
-    val command = commands[index]
-    executeCommand(IndexedValue(index, command), commands, pauseAfterMs, resumePlayingAfterMs)
-    if(!PlaybackService.turnForPart) {
-        GlobalData.lastPlaybackCommandIndex.postValue(index)
-        previousPlaybackCommand = IndexedValue(index, command)
+    val command = commands.find { it.id == id }
+    command?.part?.let {
+        executeCommand(it, resumePlayingAfterMs)
+        if (!PlaybackService.turnForPart) {
+            previousPlaybackCommand = command
+            repeatedCount = 0
+            GlobalData.repeatRemaining.postValue(getMaxRepeat() - repeatedCount)
+        }
     }
 }
 
 internal fun PlaybackService.seekRandomOrPlaySomeCommand() {
     cancelScheduledPauseResume()
     waitForDurationAndRun {
-        if(!questionAnswerEnabled()) {
+        if (!questionAnswerEnabled()) {
             seekRandomInternalOrRandomPart()
         } else {
-            if(PlaybackService.turnForPart) {
+            if (PlaybackService.turnForPart) {
                 seekRandomInternalOrRandomPart()
             } else {
                 playCounterpart(previousPlaybackCommand)
@@ -132,36 +137,31 @@ class ShuffleBag<T>(private val items: List<T>) {
         if (bag.isEmpty()) bag = items.shuffled().toMutableList()
         return bag.removeAt(0)
     }
+
+    fun toListInOriginalOrder(): ImmutableList<T> {
+        return items.filter { it in bag }.toImmutableList()
+    }
 }
 
-fun PlaybackService.playCounterpart(command: IndexedValue<PlaybackCommand>?) {
-    Log.d("PlaybackService", "Prev cmd: $command")
+fun PlaybackService.playCounterpart(command: PlaybackService.QA?) {
     val (pauseAfterMs, resumePlayingAfterMs) = defaultDurations()
-    val commands = PlaybackService.playbackCommands
-    if(previousPlaybackCommand == null) {
-        Log.d("PlaybackService", "Prev cmd: $command. Falling back to random.")
+    if (previousPlaybackCommand == null) {
+        Log.d("PlaybackService", "Prev cmd is null. Falling back to random.")
         PlaybackService.turnForPart = true
         seekRandomInternalOrRandomPart()
         return
     }
-    previousPlaybackCommand?.let {
-        var index = it.index + 1
-        // Part was answer, we need to play now the question
-        if (GlobalData.questionAnswerSetting.value == 1) {
-            index = it.index - 1
-        }
-        commands.getOrNull(index)?.let { cmd ->
-            executeCommand(IndexedValue(index.coerceAtLeast(0), cmd), commands, pauseAfterMs, resumePlayingAfterMs)
-        }
+    previousPlaybackCommand?.counterpart?.let {
+        executeCommand(it, resumePlayingAfterMs)
     }
 }
 
 private fun PlaybackService.seekRandomInternalOrRandomPart() {
-    val commands = PlaybackService.playbackCommands
+    val commands = PlaybackService.qaCommandList
     val (pauseAfterMs, resumePlayingAfterMs) = defaultDurations()
 
     var msg: String
-    if (commands.isEmpty()) {
+    if (commands.toListInOriginalOrder().isEmpty()) {
         withPlayer {
             val tm = (0..player.duration / 1000).random() * 1000
             player.seekTo(tm)
@@ -171,18 +171,30 @@ private fun PlaybackService.seekRandomInternalOrRandomPart() {
             schedulePauseThenResume(pauseAfterMs, resumePlayingAfterMs, msg, continueAfterResume = true)
         }
     } else {
-        if(GlobalData.repeatCommandEnabled.value == true && GlobalData.lastPlaybackCommandIndex.value != null) {
-            val index = GlobalData.lastPlaybackCommandIndex.value?.coerceAtLeast(0) ?: 0
-            executeCommand(IndexedValue(index, commands[index]), commands, pauseAfterMs, resumePlayingAfterMs)
+        val maxRepeat = getMaxRepeat()
+        val prevPlayedPart = previousPlaybackCommand?.part
+        if (GlobalData.repeatCommandEnabled.value == true && prevPlayedPart != null && repeatedCount < maxRepeat) {
+            executeCommand(prevPlayedPart, resumePlayingAfterMs)
+            GlobalData.currentlyPlayingQA.postValue(previousPlaybackCommand)
+            repeatedCount += 1
         } else {
-            //TODO: Extend with other options
-            val random =  if(GlobalData.questionAnswerSetting.value == 0) PlaybackService.questionBag.next() else PlaybackService.answerBag.next()
-            executeCommand(random, commands, pauseAfterMs, resumePlayingAfterMs)
-            previousPlaybackCommand = random
-            GlobalData.lastPlaybackCommandIndex.postValue(random.index)
+            val random = getRandomCommandToPlayNext()
+            if(random.part != null) {
+                executeCommand(random.part, resumePlayingAfterMs)
+                // New random command
+                previousPlaybackCommand?.id?.let {  updateAlreadyPlayedIndices(it) }
+                GlobalData.currentlyPlayingQA.postValue(random)
+                previousPlaybackCommand = random
+                repeatedCount = 0
+            } else {
+                Log.w("PlaybackService", "No random command to play and nothing to repeat!!")
+            }
         }
+        GlobalData.repeatRemaining.postValue(maxRepeat - repeatedCount)
     }
 }
+
+private fun getMaxRepeat() = GlobalData.repeatCount.value ?: DEFAULT_REPEAT_COUNT
 
 private fun PlaybackService.defaultDurations(): Pair<Long, Long> {
     val pauseAfterMs = (GlobalData.playDurationSeconds.value ?: defaultStopIntervalMs).toLong() * 1000
@@ -191,50 +203,44 @@ private fun PlaybackService.defaultDurations(): Pair<Long, Long> {
 }
 
 private fun PlaybackService.executeCommand(
-    random: IndexedValue<PlaybackCommand>,
-    commands: List<PlaybackCommand>,
-    pauseAfterMs: Long,
+    random: PlaybackCommand,
     resumePlayingAfterMs: Long
 ) {
-    if(commands.size < 2) {
-        return
-    }
-    var pauseAfterMs1 = pauseAfterMs
-    var resumePlayingAfterMs1 = resumePlayingAfterMs
-    var nextCommand: PlaybackCommand?
-    var commandToExecuteNow: PlaybackCommand?
-    PlaybackService.updateTurn(random.value)
+    var pauseAfterMs: Long
+    var commandToExecuteNow: PlaybackCommand
+    PlaybackService.updateTurn(random)
     withPlayer {
-        commandToExecuteNow = random.value
-        val nextIndex = random.index + 1
-        nextCommand = commands.getOrNull(nextIndex)
+        commandToExecuteNow = random
 
-        if(nextCommand != null && commandToExecuteNow != null) {
-            if (nextCommand!!.timestampMs >= commandToExecuteNow!!.timestampMs) {
-                pauseAfterMs1 = nextCommand!!.timestampMs - commandToExecuteNow!!.timestampMs
-            }
-        } else if(nextIndex == commands.size) { //last command => play until end
-            pauseAfterMs1 = player.duration - commandToExecuteNow!!.timestampMs - 100
+        val endTimeMs = commandToExecuteNow.endTimeMs ?: player.duration
+        endTimeMs.minus(commandToExecuteNow.startTimeMs).let {
+            pauseAfterMs = it
         }
 
-        when (val cmd = commandToExecuteNow) {
-            is PlaybackCommand.Stop -> {
-                resumePlayingAfterMs1 = cmd.durationMs
-            }
-            else -> {}
-        }
-
-        var msg = commandToExecuteNow?.text ?: ""
-        if(commandToExecuteNow != null) {
-            player.seekTo(commandToExecuteNow!!.timestampMs)
-        } else {
-            msg = "Unexpected!! commandToExecuteNow is null"
-        }
+        val msg = commandToExecuteNow.text
+        player.seekTo(commandToExecuteNow.startTimeMs)
 
         cancelScheduledPauseResume()
         updatePlaybackContent(msg)
         player.play()
-        schedulePauseThenResume(pauseAfterMs1, resumePlayingAfterMs1, msg, continueAfterResume = true)
+        Log.d("PlaybackService", "Playing ${commandToExecuteNow.id} $commandToExecuteNow")
+        schedulePauseThenResume(pauseAfterMs, resumePlayingAfterMs, msg, continueAfterResume = true)
+    }
+}
+
+internal fun PlaybackService.updateAlreadyPlayedIndices(id: Int) {
+    withPlayer {
+        currentMediaItem?.toTrack()?.trackId?.let {
+            if (it == GlobalData.playedTrackId.value) {
+                var alreadyPlayed = Utils.stringToIntsSet(GlobalData.playedQaCommandIds.value ?: "")
+                alreadyPlayed = alreadyPlayed.plus(id)
+                GlobalData.playedQaCommandIds.postValue(alreadyPlayed.joinToString(","))
+                Log.d("PlaybackService", "Already played Ids: $alreadyPlayed")
+            } else {
+                GlobalData.playedTrackId.postValue(it)
+                GlobalData.playedQaCommandIds.postValue("")
+            }
+        }
     }
 }
 
@@ -258,7 +264,7 @@ private fun <T> MutableLiveData<FixedSizeQueue<T>>.removeItem(item: T) {
     val newQueue = if (oldQueue != null) {
         FixedSizeQueue<T>(maxSize).apply {
             oldQueue.toList().forEach {
-                if(it?.equals(item) == false) {
+                if (it?.equals(item) == false) {
                     add(it)
                 }
             }
@@ -286,7 +292,7 @@ internal fun PlaybackService.cancelScheduledPauseResume() {
     nextScheduledPauseAction = null
     nextScheduledResumeAction = null
     isInStop = false
-    Log.d("PlaybackService", "cancelScheduledPauseResume(): token now=$scheduledCycleId")
+    //Log.d("PlaybackService", "cancelScheduledPauseResume(): token now=$scheduledCycleId")
 }
 
 /**
@@ -308,10 +314,10 @@ internal fun PlaybackService.schedulePauseThenResume(
 
     val pauseAction = Runnable {
         if (token != scheduledCycleId) {
-            Log.d("PlaybackService", "pauseAction stale (token=$token,current=${scheduledCycleId}) -> ignoring. $pauseMessage")
+            //Log.d("PlaybackService", "pauseAction stale (token=$token,current=${scheduledCycleId}) -> ignoring. $pauseMessage")
             return@Runnable
         }
-        Log.d("PlaybackService", "Pausing (token=$token) at ${Instant.now()}. $pauseMessage")
+        //Log.d("PlaybackService", "Pausing (token=$token) at ${Instant.now()}. $pauseMessage")
 
         isInStop = true
         withPlayer {
@@ -323,10 +329,10 @@ internal fun PlaybackService.schedulePauseThenResume(
         if (safeResumeMs > 0) {
             val resumeAction = Runnable {
                 if (token != scheduledCycleId) {
-                    Log.d("PlaybackService", "resumeAction stale (token=$token,current=${scheduledCycleId}) -> ignoring. $pauseMessage")
+                    //Log.d("PlaybackService", "resumeAction stale (token=$token,current=${scheduledCycleId}) -> ignoring. $pauseMessage")
                     return@Runnable
                 }
-                Log.d("PlaybackService", "Resuming (token=$token) at ${Instant.now()}. $pauseMessage")
+                //Log.d("PlaybackService", "Resuming (token=$token) at ${Instant.now()}. $pauseMessage")
                 if (isInStop) {
                     withPlayer {
                         player.play()
@@ -339,7 +345,7 @@ internal fun PlaybackService.schedulePauseThenResume(
                 if (continueAfterResume) {
                     // Post to handler to avoid running seekRandom on the same stack
                     scheduler.post {
-                        Log.d("PlaybackService", "continuing cycle after resume (token=$token). $pauseMessage")
+                        //Log.d("PlaybackService", "continuing cycle after resume (token=$token). $pauseMessage")
                         // Use public seekRandom() so it waits for duration -> avoids C.TIME_UNSET issues
                         seekRandomOrPlaySomeCommand()
                     }
@@ -348,14 +354,22 @@ internal fun PlaybackService.schedulePauseThenResume(
             nextScheduledResumeAction = resumeAction
             scheduler.postDelayed(resumeAction, safeResumeMs)
             startCountdown(safeResumeMs)
-            Log.d("PlaybackService", "⏳ Scheduled resume (token=$token) after ${safeResumeMs/1000}s at ${Instant.now().plusMillis(safeResumeMs)}. $pauseMessage")
+//            Log.d(
+//                "PlaybackService",
+//                "⏳ Scheduled resume (token=$token) after ${safeResumeMs / 1000}s at ${Instant.now().plusMillis(safeResumeMs)}. $pauseMessage"
+//            )
         }
     }
 
     nextScheduledPauseAction = pauseAction
     scheduler.postDelayed(pauseAction, safePauseMs)
     startCountdown(safePauseMs)
-    Log.d("PlaybackService", "▶ Scheduled pause (token=$token) after ${safePauseMs/1000}s at ${Instant.now().plusMillis(safePauseMs)} (resume ${safeResumeMs/1000}s). $pauseMessage")
+//    Log.d(
+//        "PlaybackService",
+//        "▶ Scheduled pause (token=$token) after ${safePauseMs / 1000}s at ${
+//            Instant.now().plusMillis(safePauseMs)
+//        } (resume ${safeResumeMs / 1000}s). $pauseMessage"
+//    )
 }
 
 private var countdownRunnable: Runnable? = null

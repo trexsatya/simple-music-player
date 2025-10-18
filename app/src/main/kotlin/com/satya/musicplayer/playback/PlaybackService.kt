@@ -9,6 +9,7 @@ import androidx.media3.common.*
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.*
 import com.satya.musicplayer.PlaybackCommand
+import com.satya.musicplayer.PlaybackCommand.Companion.buildListWithEndTimes
 import com.simplemobiletools.commons.extensions.hasPermission
 import com.simplemobiletools.commons.extensions.showErrorToast
 import com.satya.musicplayer.extensions.*
@@ -18,6 +19,7 @@ import com.satya.musicplayer.playback.library.MediaItemProvider
 import com.satya.musicplayer.playback.player.ShuffleBag
 import com.satya.musicplayer.playback.player.SimpleMusicPlayer
 import com.satya.musicplayer.playback.player.initializeSessionAndPlayer
+import kotlinx.collections.immutable.ImmutableList
 
 @OptIn(UnstableApi::class)
 class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
@@ -28,7 +30,7 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
     internal lateinit var mediaSession: MediaLibrarySession
     internal lateinit var mediaItemProvider: MediaItemProvider
 
-    internal var previousPlaybackCommand: IndexedValue<PlaybackCommand>? = null
+    internal var previousPlaybackCommand: QA? = null
     internal var lastRandomPosition: Long? = null
     val defaultStopIntervalMs = 10_000L
     internal var currentRoot = ""
@@ -99,6 +101,8 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
         // todo: show a notification instead.
     }
 
+    data class QA(val part: PlaybackCommand?, val counterpart: PlaybackCommand?, val id: Int)
+
     companion object {
         // Initializing a media controller might take a noticeable amount of time thus we expose current playback info here to keep things as quick as possible.
         var isPlaying: Boolean = false
@@ -107,9 +111,8 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
             private set
         var nextMediaItem: MediaItem? = null
             private set
-        var playbackCommands: List<PlaybackCommand> = listOf()
-        var questionBag = ShuffleBag<IndexedValue<PlaybackCommand>>(listOf())
-        var answerBag = ShuffleBag<IndexedValue<PlaybackCommand>>(listOf())
+        private var playbackCommands: List<PlaybackCommand> = listOf()
+        var qaCommandList: ShuffleBag<QA> = ShuffleBag(listOf())
 
         /**
          * part or counterpart: if part is ques, counterpart is answer and vice-versa
@@ -122,19 +125,40 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
             isPlaying = player.isReallyPlaying
         }
 
+        //TODO: Extend with other options
+        fun getRandomCommandToPlayNext() = qaCommandList.next()
+
         fun setPlaybackCommands(playbackFileContent: String, andThen: Runnable) {
-            playbackCommands = playbackFileContent.trimIndent().lines().mapNotNull { PlaybackCommand.from(it) }
-            questionBag = ShuffleBag(playbackCommands.withIndex().toList().filter { it.value.isQuestion() })
-            answerBag = ShuffleBag(playbackCommands.withIndex().toList().filter { it.value.isAnswer() })
+            playbackCommands = buildListWithEndTimes(playbackFileContent.trimIndent().lines())
+            qaCommandList = ShuffleBag(buildQAList(playbackCommands, GlobalData.questionAnswerSetting.value == 1))
             andThen.run()
         }
 
+        private fun buildQAList(items: List<PlaybackCommand>, swap: Boolean = false): List<QA> {
+            return items.chunked(2).withIndex().mapNotNull { pairWithIndex ->
+                val pair = pairWithIndex.value
+                val id = pairWithIndex.index
+                when (pair.size) {
+                    2 -> if (!swap) {
+                        QA(part = pair[0], counterpart = pair[1], id)
+                    } else
+                        QA(part = pair[1], counterpart = pair[0], id)
+                    1 -> { // only one item left, handle gracefully
+                        if (!swap)
+                            QA(part = pair[0], counterpart = null, id) // no counterpart
+                        else
+                            QA(part = null, counterpart = pair[0], id) // no part
+                    }
+                    else -> null
+                }
+            }
+        }
+
         fun updateTurn(commandPlayedNow: PlaybackCommand) {
-            var isPartPlayedNow = false
-            if(GlobalData.questionAnswerSetting.value == 0) {
-                isPartPlayedNow = commandPlayedNow.isQuestion()
+            val isPartPlayedNow: Boolean = if(GlobalData.questionAnswerSetting.value == 0) {
+                commandPlayedNow.isQuestion()
             } else {
-                isPartPlayedNow = commandPlayedNow.isAnswer()
+                commandPlayedNow.isAnswer()
             }
             turnForPart = !isPartPlayedNow
         }
