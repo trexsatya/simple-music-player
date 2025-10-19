@@ -1,5 +1,4 @@
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root_frame"
@@ -35,11 +34,10 @@
                 android:id="@+id/activity_countdown_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="@dimen/extra_big_text_size"
                 android:text="(X)s"
-                app:layout_constraintTop_toBottomOf="@+id/activity_track_appbar"
+                android:textSize="@dimen/extra_big_text_size"
                 app:layout_constraintEnd_toEndOf="@+id/activity_track_appbar"
-                />
+                app:layout_constraintTop_toBottomOf="@+id/activity_track_appbar" />
 
             <TextView
                 android:id="@+id/activity_playback_control_file_content"
@@ -105,12 +103,12 @@
                 app:layout_constraintTop_toBottomOf="@+id/activity_track_progressbar" />
 
             <TextView
-                android:text="0"
                 android:id="@+id/activity_repeat_remaining"
-                app:layout_constraintRight_toLeftOf="@id/activity_playback_file_repeat_command"
-                app:layout_constraintBottom_toBottomOf="@id/activity_playback_file_repeat_command"
                 android:layout_width="30dp"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:text="0"
+                app:layout_constraintBottom_toBottomOf="@id/activity_playback_file_repeat_command"
+                app:layout_constraintRight_toLeftOf="@id/activity_playback_file_repeat_command" />
 
             <ToggleButton
                 android:id="@+id/activity_playback_file_repeat_command"
@@ -126,11 +124,19 @@
             <Button
                 android:id="@+id/activity_track_piano_btn"
                 android:layout_width="wrap_content"
-                android:text="Piano"
                 android:layout_height="wrap_content"
+                android:text="Piano"
                 app:layout_constraintStart_toEndOf="@id/activity_track_toggle_shuffle"
-                app:layout_constraintTop_toTopOf="@id/activity_track_toggle_shuffle"
-                />
+                app:layout_constraintTop_toTopOf="@id/activity_track_toggle_shuffle" />
+
+            <Button
+                android:id="@+id/activity_track_skip_command_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SKP"
+                android:backgroundTint="@color/md_blue"
+                app:layout_constraintStart_toEndOf="@id/activity_track_piano_btn"
+                app:layout_constraintTop_toTopOf="@id/activity_track_toggle_shuffle" />
 
             <com.simplemobiletools.commons.views.MyTextView
                 android:id="@+id/activity_track_speed"
@@ -191,7 +197,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:width="800dp"
-                android:visibility="gone"
                 android:alpha="0.8"
                 android:fadingEdge="horizontal"
                 android:gravity="center"
@@ -199,6 +204,7 @@
                 android:paddingEnd="@dimen/activity_margin"
                 android:scrollHorizontally="true"
                 android:textSize="@dimen/actionbar_text_size"
+                android:visibility="gone"
                 app:layout_constraintBottom_toTopOf="@+id/activity_track_toggle_shuffle"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -236,15 +242,15 @@
                 android:id="@+id/activity_playback_settings"
                 android:layout_width="wrap_content"
                 android:layout_height="@dimen/smaller_icon_size"
+                android:layout_marginEnd="50dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/settings"
                 android:padding="@dimen/tiny_margin"
-                android:layout_marginEnd="50dp"
                 android:src="@drawable/media3_icon_settings"
-                app:layout_constraintTop_toTopOf="@id/activity_track_previous"
                 app:layout_constraintBottom_toBottomOf="@id/activity_track_previous"
                 app:layout_constraintEnd_toStartOf="@id/activity_track_previous"
-                app:layout_constraintStart_toEndOf="@id/activity_track_toggle_shuffle" />
+                app:layout_constraintStart_toEndOf="@id/activity_track_toggle_shuffle"
+                app:layout_constraintTop_toTopOf="@id/activity_track_previous" />
 
 
             <com.airbnb.lottie.LottieAnimationView
@@ -346,10 +352,11 @@
             </com.google.android.material.appbar.AppBarLayout>
 
             <LinearLayout
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/activity_track_appbar"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/activity_track_appbar">
+
                 <FrameLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -358,18 +365,17 @@
                     <NumberPicker
                         android:id="@+id/activity_playback_command_items"
                         android:layout_width="320dp"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content" />
                 </FrameLayout>
 
                 <Button
                     android:id="@+id/activity_play_specific_command"
-                    android:text="Go"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="65dp"
                     android:background="@color/md_blue"
                     android:padding="0dp"
-                    android:layout_marginTop="65dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-                </Button>
+                    android:text="Go"></Button>
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
@@ -381,40 +387,42 @@
         android:layout_height="wrap_content"
         android:background="@android:color/white"
         android:elevation="10dp"
-        android:visibility="gone"
         android:padding="16dp"
         android:translationY="1000dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <include layout="@layout/playback_file_cntnr_layout" android:id="@+id/playbackFileContainer"/>
+        <include
+            android:id="@+id/playbackFileContainer"
+            layout="@layout/playback_file_cntnr_layout" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Hidden overlay panel -->
     <androidx.constraintlayout.widget.ConstraintLayout
-    android:id="@+id/piano_overlay"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@android:color/white"
-    android:elevation="10dp"
-    android:visibility="gone"
-    android:padding="16dp">
-
-    <Button
-        android:id="@+id/close_piano_btn"
-        android:text="X"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <include
-        layout="@layout/piano_keyboard"
-        android:id="@+id/pianoKeyboardContainer"
+        android:id="@+id/piano_overlay"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/close_piano_btn"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:layout_height="match_parent"
+        android:background="@android:color/white"
+        android:elevation="10dp"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/close_piano_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="X"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <include
+            android:id="@+id/pianoKeyboardContainer"
+            layout="@layout/piano_keyboard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/close_piano_btn" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>

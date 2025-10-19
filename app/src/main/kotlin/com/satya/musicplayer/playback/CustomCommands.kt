@@ -19,6 +19,7 @@ enum class CustomCommands(val customAction: String) {
     SEEK_RANDOM(customAction = PATH + "SEEK_RANDOM"),
     REPLAY_LAST_RANDOM(customAction = PATH + "REPLAY_RANDOM"),
     PLAY_COMMAND(customAction = PATH + "PLAY_COMMAND"),
+    SKIP_COMMAND(customAction = PATH + "SKIP_COMMAND"),
     ;
 
     val sessionCommand = SessionCommand(customAction, Bundle.EMPTY)

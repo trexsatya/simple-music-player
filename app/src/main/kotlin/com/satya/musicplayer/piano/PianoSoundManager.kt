@@ -51,6 +51,9 @@ class PianoSoundManager(context: Context) {
             val resId = context.resources.getIdentifier(note, "raw", context.packageName)
             if (resId != 0) soundMap[note] = soundPool.load(context, resId, 1)
         }
+
+        soundMap["gong_1"] = soundPool.load(context, R.raw.gong_1, 1)
+        soundMap["gong_2"] = soundPool.load(context, R.raw.gong_2, 1)
     }
 
     fun play(note: String) {

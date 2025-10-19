@@ -19,7 +19,6 @@ import com.satya.musicplayer.playback.library.MediaItemProvider
 import com.satya.musicplayer.playback.player.ShuffleBag
 import com.satya.musicplayer.playback.player.SimpleMusicPlayer
 import com.satya.musicplayer.playback.player.initializeSessionAndPlayer
-import kotlinx.collections.immutable.ImmutableList
 
 @OptIn(UnstableApi::class)
 class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
@@ -126,7 +125,15 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
         }
 
         //TODO: Extend with other options
-        fun getRandomCommandToPlayNext() = qaCommandList.next()
+        fun getRandomCommandToPlayNext(excludeIds: List<Int>, onEmpty: Runnable): QA {
+            var next: QA
+            while (true) {
+                next = qaCommandList.next(onEmpty)
+                if(next.id !in excludeIds) {
+                    return next
+                }
+            }
+        }
 
         fun setPlaybackCommands(playbackFileContent: String, andThen: Runnable) {
             playbackCommands = buildListWithEndTimes(playbackFileContent.trimIndent().lines())

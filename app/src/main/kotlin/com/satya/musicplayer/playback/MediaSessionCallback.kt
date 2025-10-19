@@ -144,8 +144,13 @@ internal fun PlaybackService.getMediaSessionCallback() = object : MediaLibrarySe
             CustomCommands.REPLAY_LAST_RANDOM -> {}
             CustomCommands.PLAY_COMMAND -> {
                 try {
-                    playSpecificCommand(args.getInt("index"))
+                    args.getString("id")?.toIntOrNull()?.let {
+                        playSpecificCommand(it)
+                    }
                 } catch (_: Exception) {}
+            }
+            CustomCommands.SKIP_COMMAND -> {
+                skipCurrentCommand()
             }
         }
 

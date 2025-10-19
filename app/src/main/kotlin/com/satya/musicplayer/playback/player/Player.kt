@@ -23,6 +23,7 @@ import com.satya.musicplayer.activities.MainActivity
 import com.satya.musicplayer.extensions.*
 import com.satya.musicplayer.helpers.SEEK_INTERVAL_MS
 import com.satya.musicplayer.playback.*
+import com.satya.musicplayer.playback.GlobalData.currentlyPlayingQA
 import com.satya.musicplayer.playback.GlobalData.manualPlayPause
 import com.satya.musicplayer.playback.PlaybackService.Companion.getRandomCommandToPlayNext
 import com.satya.musicplayer.playback.PlaybackService.Companion.updatePlaybackInfo
@@ -30,7 +31,6 @@ import com.satya.musicplayer.playback.getCustomLayout
 import com.satya.musicplayer.playback.getMediaSessionCallback
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import java.time.Instant
 
 private const val PLAYER_THREAD = "PlayerThread"
 const val PAUSE_AFTER_MS = 30000
@@ -94,26 +94,34 @@ private fun updatePlaybackContent(txt: String) {
 }
 
 internal fun PlaybackService.mediaNextButtonClicked(player: SimpleMusicPlayer) {
-    rewind()
+    skipCurrentCommand()
 }
 
 var repeatedCount = 0
+var repetitionReachedMax = false
+
 internal fun PlaybackService.playSpecificCommand(id: Int) {
     val (pauseAfterMs, resumePlayingAfterMs) = defaultDurations()
 
-    val commands = PlaybackService.qaCommandList.toListInOriginalOrder()
+    val commands = PlaybackService.qaCommandList.remainingListInOriginalOrder()
     if (commands.isEmpty()) {
         return
     }
     val command = commands.find { it.id == id }
     command?.part?.let {
-        executeCommand(it, resumePlayingAfterMs)
+        executeCommand(command.id, it, resumePlayingAfterMs)
         if (!PlaybackService.turnForPart) {
-            previousPlaybackCommand = command
+            currentlyPlayingQA.postValue(command)
             repeatedCount = 0
             GlobalData.repeatRemaining.postValue(getMaxRepeat() - repeatedCount)
         }
     }
+}
+
+internal fun PlaybackService.skipCurrentCommand() {
+    previousPlaybackCommand = currentlyPlayingQA.value
+    val (pauseAfterMs, resumePlayingAfterMs) = defaultDurations()
+    playNewRandomCommand(resumePlayingAfterMs)
 }
 
 internal fun PlaybackService.seekRandomOrPlaySomeCommand() {
@@ -125,7 +133,7 @@ internal fun PlaybackService.seekRandomOrPlaySomeCommand() {
             if (PlaybackService.turnForPart) {
                 seekRandomInternalOrRandomPart()
             } else {
-                playCounterpart(previousPlaybackCommand)
+                playCounterpart(currentlyPlayingQA.value)
             }
         }
     }
@@ -133,26 +141,31 @@ internal fun PlaybackService.seekRandomOrPlaySomeCommand() {
 
 class ShuffleBag<T>(private val items: List<T>) {
     private var bag = items.shuffled().toMutableList()
-    fun next(): T {
-        if (bag.isEmpty()) bag = items.shuffled().toMutableList()
+    fun next(onEmpty: Runnable): T {
+        if (bag.isEmpty()) {
+            onEmpty.run()
+            bag = items.shuffled().toMutableList()
+        }
         return bag.removeAt(0)
     }
 
-    fun toListInOriginalOrder(): ImmutableList<T> {
+    fun remainingListInOriginalOrder(): ImmutableList<T> {
         return items.filter { it in bag }.toImmutableList()
     }
+
+    fun isEmpty() = items.isEmpty()
 }
 
 fun PlaybackService.playCounterpart(command: PlaybackService.QA?) {
     val (pauseAfterMs, resumePlayingAfterMs) = defaultDurations()
-    if (previousPlaybackCommand == null) {
+    if (command == null) {
         Log.d("PlaybackService", "Prev cmd is null. Falling back to random.")
         PlaybackService.turnForPart = true
         seekRandomInternalOrRandomPart()
         return
     }
-    previousPlaybackCommand?.counterpart?.let {
-        executeCommand(it, resumePlayingAfterMs)
+    command.counterpart?.let {
+        executeCommand(command.id, it, resumePlayingAfterMs)
     }
 }
 
@@ -161,7 +174,7 @@ private fun PlaybackService.seekRandomInternalOrRandomPart() {
     val (pauseAfterMs, resumePlayingAfterMs) = defaultDurations()
 
     var msg: String
-    if (commands.toListInOriginalOrder().isEmpty()) {
+    if (commands.isEmpty()) {
         withPlayer {
             val tm = (0..player.duration / 1000).random() * 1000
             player.seekTo(tm)
@@ -172,25 +185,46 @@ private fun PlaybackService.seekRandomInternalOrRandomPart() {
         }
     } else {
         val maxRepeat = getMaxRepeat()
-        val prevPlayedPart = previousPlaybackCommand?.part
-        if (GlobalData.repeatCommandEnabled.value == true && prevPlayedPart != null && repeatedCount < maxRepeat) {
-            executeCommand(prevPlayedPart, resumePlayingAfterMs)
-            GlobalData.currentlyPlayingQA.postValue(previousPlaybackCommand)
+        val currentCommand = currentlyPlayingQA.value
+        val toRepeat = currentCommand?.part
+        if (GlobalData.repeatCommandEnabled.value == true && toRepeat != null && repeatedCount < maxRepeat) {
+            executeCommand(currentCommand.id, toRepeat, resumePlayingAfterMs)
             repeatedCount += 1
+            repetitionReachedMax = repeatedCount >= maxRepeat
         } else {
-            val random = getRandomCommandToPlayNext()
-            if(random.part != null) {
-                executeCommand(random.part, resumePlayingAfterMs)
-                // New random command
-                previousPlaybackCommand?.id?.let {  updateAlreadyPlayedIndices(it) }
-                GlobalData.currentlyPlayingQA.postValue(random)
-                previousPlaybackCommand = random
-                repeatedCount = 0
-            } else {
-                Log.w("PlaybackService", "No random command to play and nothing to repeat!!")
-            }
+            playNewRandomCommand(resumePlayingAfterMs)
+            repeatedCount = 0
+            repetitionReachedMax = false
         }
-        GlobalData.repeatRemaining.postValue(maxRepeat - repeatedCount)
+        GlobalData.repeatRemaining.postValue(maxRepeat - repeatedCount )
+    }
+}
+
+private fun PlaybackService.playNewRandomCommand(resumePlayingAfterMs: Long) {
+    var excludeIds: List<Int> = listOf()
+    withPlayer {
+        val currentTrackId = currentMediaItem?.toTrack()?.trackId
+
+        if (currentTrackId == GlobalData.playedTrackId.value) {
+            excludeIds = GlobalData.playedQaCommandIds.value?.toList() ?: listOf()
+        }
+        val random = getRandomCommandToPlayNext(excludeIds) {
+            GlobalData.message.postValue(Event(ALL_COMMANDS_PLAYED))
+            GlobalData.playedQaCommandIds.postValue(setOf())
+            try {
+                Thread.sleep(5000)
+            } catch (_: Exception) {}
+        }
+        if (random.part != null) {
+            currentlyPlayingQA.value?.id?.let { updateAlreadyPlayedIndices(it) }
+            executeCommand(random.id, random.part, resumePlayingAfterMs)
+            // New random command
+            currentlyPlayingQA.postValue(random)
+            Log.d("PlaybackService", "Currently playing: ${currentlyPlayingQA.value?.id}")
+            previousPlaybackCommand = random
+        } else {
+            Log.w("PlaybackService", "No random command to play and nothing to repeat!!")
+        }
     }
 }
 
@@ -203,6 +237,7 @@ private fun PlaybackService.defaultDurations(): Pair<Long, Long> {
 }
 
 private fun PlaybackService.executeCommand(
+    id: Int,
     random: PlaybackCommand,
     resumePlayingAfterMs: Long
 ) {
@@ -221,7 +256,7 @@ private fun PlaybackService.executeCommand(
         player.seekTo(commandToExecuteNow.startTimeMs)
 
         cancelScheduledPauseResume()
-        updatePlaybackContent(msg)
+        updatePlaybackContent("$id || $msg")
         player.play()
         Log.d("PlaybackService", "Playing ${commandToExecuteNow.id} $commandToExecuteNow")
         schedulePauseThenResume(pauseAfterMs, resumePlayingAfterMs, msg, continueAfterResume = true)
@@ -232,13 +267,13 @@ internal fun PlaybackService.updateAlreadyPlayedIndices(id: Int) {
     withPlayer {
         currentMediaItem?.toTrack()?.trackId?.let {
             if (it == GlobalData.playedTrackId.value) {
-                var alreadyPlayed = Utils.stringToIntsSet(GlobalData.playedQaCommandIds.value ?: "")
+                var alreadyPlayed = GlobalData.playedQaCommandIds.value ?: setOf()
                 alreadyPlayed = alreadyPlayed.plus(id)
-                GlobalData.playedQaCommandIds.postValue(alreadyPlayed.joinToString(","))
+                GlobalData.playedQaCommandIds.postValue(alreadyPlayed)
                 Log.d("PlaybackService", "Already played Ids: $alreadyPlayed")
             } else {
                 GlobalData.playedTrackId.postValue(it)
-                GlobalData.playedQaCommandIds.postValue("")
+                GlobalData.playedQaCommandIds.postValue(setOf())
             }
         }
     }
@@ -295,6 +330,9 @@ internal fun PlaybackService.cancelScheduledPauseResume() {
     //Log.d("PlaybackService", "cancelScheduledPauseResume(): token now=$scheduledCycleId")
 }
 
+val REPETITION_REACHED_MAX = "repetitionReachedMax"
+val ALL_COMMANDS_PLAYED = "allCommandsPlayed"
+
 /**
  * Schedule a pause after [pauseAfterMs], then schedule resume after [resumeAfterMs].
  * If continueAfterResume==true, the resume action will start the next random cycle by calling seekRandom().
@@ -322,6 +360,11 @@ internal fun PlaybackService.schedulePauseThenResume(
         isInStop = true
         withPlayer {
             player.pause()
+        }
+        if(repetitionReachedMax) {
+            // Consume and reset
+            GlobalData.message.postValue(Event(REPETITION_REACHED_MAX))
+            repetitionReachedMax = false
         }
         updatePlaybackContent(pauseMessage)
 

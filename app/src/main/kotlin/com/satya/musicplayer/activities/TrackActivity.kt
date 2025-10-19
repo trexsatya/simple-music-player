@@ -49,6 +49,8 @@ import com.satya.musicplayer.playback.DEFAULT_REPEAT_COUNT
 import com.satya.musicplayer.playback.GlobalData
 import com.satya.musicplayer.playback.PlaybackService
 import com.satya.musicplayer.playback.PlaybackService.Companion.setPlaybackCommands
+import com.satya.musicplayer.playback.player.ALL_COMMANDS_PLAYED
+import com.satya.musicplayer.playback.player.REPETITION_REACHED_MAX
 import com.satya.musicplayer.playback.player.ShuffleBag
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.MEDIUM_ALPHA
@@ -173,6 +175,15 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundMa
         GlobalData.playedQaCommandIds.observe(this) {
             updatePlaybackCommandList()
         }
+
+        GlobalData.message.observe(this) { event ->
+            if(event.content.equals(REPETITION_REACHED_MAX)) {
+                soundManager.play("gong_2")
+            }
+            if(event.content.equals(ALL_COMMANDS_PLAYED)) {
+                soundManager.play("gong_1")
+            }
+        }
     }
 
     private lateinit var soundManager: PianoSoundManager
@@ -257,7 +268,10 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundMa
         binding.activityTrackArtist.setTextColor(getProperTextColor())
         updatePlayerState()
         updateTrackInfo()
-        GlobalData.playedQaCommandIds.postValue(sharedPreferences?.getString(PLAYED_COMMANDS_IDS_KEY, ""))
+        sharedPreferences?.getString(PLAYED_COMMANDS_IDS_KEY, "")?.let {
+            GlobalData.playedQaCommandIds.postValue(Utils.stringToIntsSet(it))
+        }
+
         GlobalData.playedTrackId.postValue(sharedPreferences?.getInt(PLAYED_TRACK_ID_KEY, -1))
     }
 
@@ -265,7 +279,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundMa
         super.onPause()
         cancelProgressUpdate()
 
-        sharedPreferences?.edit()?.putString(PLAYED_COMMANDS_IDS_KEY, GlobalData.playedQaCommandIds.value ?: "")?.apply()
+        sharedPreferences?.edit()?.putString(PLAYED_COMMANDS_IDS_KEY, GlobalData.playedQaCommandIds.value?.joinToString(","))?.apply()
         sharedPreferences?.edit()?.putInt(PLAYED_TRACK_ID_KEY, GlobalData.playedTrackId.value ?: -1)?.apply()
     }
 
@@ -398,10 +412,11 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundMa
             activityPlaySpecificCommand.setOnClickListener {
                 val selected = activityPlaybackCommandItems.value
                 val idOfTheQA = getIdFromDisplayedValueOfCommandQa(activityPlaybackCommandItems.displayedValues[selected])
+
                 withPlayer {
                     sendCommand(
                         command = CustomCommands.PLAY_COMMAND,
-                        extras = bundleOf("index" to idOfTheQA)
+                        extras = bundleOf("id" to idOfTheQA)
                     )
                 }
             }
@@ -417,7 +432,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundMa
             setupPlaybackSettingButton()
             setupSeekbar()
 
-            val repeatCounts = listOf(DEFAULT_REPEAT_COUNT.toString(), "10", "15", "20", "100")
+            val repeatCounts = listOf(DEFAULT_REPEAT_COUNT.toString(), "5", "10", "15", "20", "100")
             binding.playbackFileContainer.activityRepeatCount.minValue = 0
             binding.playbackFileContainer.activityRepeatCount.maxValue = repeatCounts.size - 1
             binding.playbackFileContainer.activityRepeatCount.displayedValues = repeatCounts.toTypedArray()
@@ -429,6 +444,15 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundMa
             arrayOf(activityTrackPrevious, activityTrackPlayPause, activityTrackNext).forEach {
                 it.applyColorFilter(getProperTextColor())
             }
+
+            activityTrackSkipCommandBtn.setOnClickListener {
+                withPlayer {
+                    sendCommand(
+                        command = CustomCommands.SKIP_COMMAND,
+                        extras = bundleOf("NOT_REQUIRED" to "_")
+                    )
+                }
+            }
         }
     }
 
@@ -436,15 +460,20 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundMa
 
     private fun updatePlaybackCommandList(): ActivityTrackBinding {
         val b = binding
-        var alreadyPlayed = Utils.stringToIntsSet(GlobalData.playedQaCommandIds.value ?: "")
+        var alreadyPlayed = GlobalData.playedQaCommandIds.value ?: setOf()
         withPlayer {
             if(GlobalData.playedTrackId.value != currentMediaItem?.toTrack()?.trackId) {
                 alreadyPlayed = setOf()
             }
         }
 
-        val snapshot = PlaybackService.qaCommandList.toListInOriginalOrder().filterNot { it.id in alreadyPlayed }
-
+        var snapshot = PlaybackService.qaCommandList.remainingListInOriginalOrder().filterNot { it.id in alreadyPlayed }
+        //Because ShuffleBag.next removes the item
+        GlobalData.currentlyPlayingQA.value?.let {  current ->
+            if(snapshot.find { it.id == current.id} == null) {
+                snapshot = snapshot.toMutableList().plus(current)
+            }
+        }
         b.root.post {
             val picker = b.activityPlaybackCommandItems
 
