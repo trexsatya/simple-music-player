@@ -16,22 +16,22 @@ import com.satya.musicplayer.extensions.*
 import com.satya.musicplayer.helpers.NotificationHelper
 import com.satya.musicplayer.helpers.getPermissionToRequest
 import com.satya.musicplayer.playback.library.MediaItemProvider
+import com.satya.musicplayer.playback.player.CircularList
 import com.satya.musicplayer.playback.player.ShuffleBag
 import com.satya.musicplayer.playback.player.SimpleMusicPlayer
 import com.satya.musicplayer.playback.player.initializeSessionAndPlayer
+import java.util.Timer
 
 @OptIn(UnstableApi::class)
 class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
     internal lateinit var player: SimpleMusicPlayer
     internal lateinit var playerThread: HandlerThread
     internal lateinit var playerListener: Player.Listener
+    internal lateinit var timer: Timer
     internal lateinit var playerHandler: Handler
     internal lateinit var mediaSession: MediaLibrarySession
     internal lateinit var mediaItemProvider: MediaItemProvider
 
-    internal var previousPlaybackCommand: QA? = null
-    internal var lastRandomPosition: Long? = null
-    val defaultStopIntervalMs = 10_000L
     internal var currentRoot = ""
 
     override fun onCreate() {
@@ -48,6 +48,7 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
         releaseMediaSession()
         clearListener()
         stopSleepTimer()
+        timer.cancel()
         SimpleEqualizer.release()
     }
 
@@ -103,6 +104,14 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
     data class QA(val part: PlaybackCommand?, val counterpart: PlaybackCommand?, val id: Int)
 
     companion object {
+        var resumeAt: Long? = 0
+        var pauseAt: Long? = 0L
+        var pausedManually = false
+        var programmaticChange = false
+        var currentPosition = 0L
+        var timestampForNextAction = ""
+        var playbackSpeeds = CircularList(listOf(1.0f))
+        var currentPlaybackSpeed = 1.0f
         // Initializing a media controller might take a noticeable amount of time thus we expose current playback info here to keep things as quick as possible.
         var isPlaying: Boolean = false
             private set
@@ -111,7 +120,13 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
         var nextMediaItem: MediaItem? = null
             private set
         private var playbackCommands: List<PlaybackCommand> = listOf()
-        var qaCommandList: ShuffleBag<QA> = ShuffleBag(listOf())
+        var qaCommandListShuffled: ShuffleBag<QA> = ShuffleBag(listOf())
+        private var qaCommandListSequential: CircularList<QA> = CircularList(listOf())
+        internal var previousPlaybackCommand: QA? = null
+        internal var lastRandomPosition: Long? = null
+        internal var lastDuration: Long? = null
+        const val DEFAULT_STOP_INTERVAL_MS = 10_000L
+        internal var savedSpeed = 1.0f
 
         /**
          * part or counterpart: if part is ques, counterpart is answer and vice-versa
@@ -125,19 +140,35 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
         }
 
         //TODO: Extend with other options
-        fun getRandomCommandToPlayNext(excludeIds: List<Int>, onEmpty: Runnable): QA {
+        fun getRandomCommandToPlayNext(excludeIds: List<Int>, onEmpty: Runnable): QA? {
+            if(qaCommandListShuffled.isEmpty()) return null
+            if(qaCommandListShuffled.items().size == 1) {
+                return qaCommandListShuffled.items()[0]
+            }
             var next: QA
             while (true) {
-                next = qaCommandList.next(onEmpty)
+                next = qaCommandListShuffled.next(onEmpty)
                 if(next.id !in excludeIds) {
                     return next
                 }
             }
         }
 
+        fun getCommandToPlayNext(): QA? {
+            return qaCommandListSequential.next()
+        }
+
+        fun clearPlaybackCommands(andThen: Runnable) {
+            playbackCommands = listOf()
+            qaCommandListShuffled = ShuffleBag(listOf())
+            qaCommandListSequential = CircularList(listOf())
+            andThen.run()
+        }
+
         fun setPlaybackCommands(playbackFileContent: String, andThen: Runnable) {
             playbackCommands = buildListWithEndTimes(playbackFileContent.trimIndent().lines())
-            qaCommandList = ShuffleBag(buildQAList(playbackCommands, GlobalData.questionAnswerSetting.value == 1))
+            qaCommandListShuffled = ShuffleBag(buildQAList(playbackCommands, GlobalData.questionAnswerSetting.value == 1))
+            qaCommandListSequential = CircularList(buildQAList(playbackCommands, GlobalData.questionAnswerSetting.value == 1))
             andThen.run()
         }
 

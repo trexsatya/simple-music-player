@@ -111,7 +111,11 @@ class Utils {
             val minutes = TimeUnit.MILLISECONDS.toMinutes(millis) % 60
             val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
 
-            return String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
+            return when {
+                hours > 0 -> String.format(Locale.getDefault(), "%d:%02d:%02d", hours, minutes, seconds)
+                minutes > 0 -> String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
+                else -> String.format(Locale.getDefault(), "%02d", seconds)
+            }
         }
 
         fun parseTimestamp(timestamp: String): Triple<Int, Int, Int>? {

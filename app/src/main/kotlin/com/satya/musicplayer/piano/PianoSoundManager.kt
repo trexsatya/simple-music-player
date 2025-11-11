@@ -59,7 +59,7 @@ class PianoSoundManager(context: Context) {
     fun play(note: String) {
         val nm  = note.replace("#", "_sharp")
         val soundId = soundMap[nm] ?: return
-        val streamId = soundPool.play(soundId, 2.0f, 2.0f, 1, 0, 1f)
+        val streamId = soundPool.play(soundId, 3.0f, 3.0f, 1, 0, 1f)
         activeNotes[streamId] = sustainLevel
     }
 

@@ -20,11 +20,12 @@ class PianoView(
 ) : FrameLayout(context) {
 
     private val noteNames = listOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+
     private val allNotes: List<String>
     private val whiteNotes: List<String>
 
     private val WHITE_KEY_WIDTH = 180f
-    private val WHITE_KEY_HEIGHT = 300f
+    private val WHITE_KEY_HEIGHT = 400f
     private val BLACK_KEY_WIDTH = 120f
     private val BLACK_KEY_HEIGHT = 180f
 
@@ -101,7 +102,7 @@ class PianoView(
         }
 
         val label = TextView(context).apply {
-            text = note
+            text = westernToSargamNote(note)
             textSize = 14f
             setTextColor(Color.DKGRAY)
             gravity = Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM
@@ -169,7 +170,7 @@ class PianoView(
         attrs: AttributeSet? = null
     ) : HorizontalScrollView(context, attrs) {
 
-        var isScrollLocked = false
+        var isScrollLocked = true
 
         override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
             return if (isScrollLocked) false else super.onInterceptTouchEvent(ev)
@@ -178,5 +179,36 @@ class PianoView(
         override fun onTouchEvent(ev: MotionEvent?): Boolean {
             return if (isScrollLocked) false else super.onTouchEvent(ev)
         }
+    }
+
+    fun westernToSargamNote(note: String): String {
+        val sargamMap = mapOf(
+            "C"  to "S",
+            "C#" to "r", "Db" to "r",
+            "D"  to "R",
+            "D#" to "g", "Eb" to "g",
+            "E"  to "G",
+            "F"  to "m",
+            "F#" to "M", "Gb" to "M",
+            "G"  to "P",
+            "G#" to "d", "Ab" to "d",
+            "A"  to "D",
+            "A#" to "n", "Bb" to "n",
+            "B"  to "N"
+        )
+
+        // Parse note like "C4", "F#3", "Bb2", "G5"
+        val match = Regex("""^([A-Ga-g])([#b]?)(\d+)$""").matchEntire(note)
+            ?: error("Invalid note format: $note")
+
+        val letter = match.groupValues[1].uppercase()
+        val accidental = match.groupValues[2]
+        val octave = match.groupValues[3]
+
+        val western = letter + accidental
+        val sargam = sargamMap[western]
+            ?: error("Unsupported note: $western")
+
+        return sargam + octave
     }
 }

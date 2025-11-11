@@ -1,5 +1,7 @@
 package com.satya.musicplayer
 
+import com.satya.musicplayer.playback.player.ShuffleBag
+
 class UtilsTest {
    @org.junit.Test
    fun testA() {
@@ -31,4 +33,23 @@ class UtilsTest {
       )
       println(list)
    }
+
+    @org.junit.Test
+    fun testShuffleBag() {
+        val bag = ShuffleBag<Int>(listOf(1));
+        getRandom(bag)
+        getRandom(bag)
+        getRandom(bag)
+        getRandom(bag)
+        getRandom(bag)
+        getRandom(bag)
+    }
+
+    private fun getRandom(bag: ShuffleBag<Int>) {
+        println("0.5".toFloat())
+        val next = bag.next {
+            println("empty")
+        }
+        println(next)
+    }
 }

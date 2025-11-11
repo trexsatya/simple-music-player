@@ -51,7 +51,7 @@ class MainActivity : SimpleMusicActivity() {
         isMaterialActivity = true
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        appLaunched(com.satya.musicplayer.BuildConfig.APPLICATION_ID)
+        appLaunched(BuildConfig.APPLICATION_ID)
         setupOptionsMenu()
         refreshMenuItems()
         updateMaterialActivityViews(binding.mainCoordinator, binding.mainHolder, useTransparentNavigation = false, useTopSearchMenu = true)

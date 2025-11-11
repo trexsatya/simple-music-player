@@ -2,6 +2,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/playback_file_cntnr"
     android:paddingTop="70dp"
+    android:foregroundTint="@color/md_blue"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -47,7 +48,7 @@
         android:id="@+id/activity_random_seek_toggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:checked="true"
+        android:checked="false"
         android:textOff="RND OFF"
         android:textOn="RND ON"
         app:layout_constraintRight_toLeftOf="parent"
