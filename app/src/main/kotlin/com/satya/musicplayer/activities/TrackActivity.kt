@@ -48,6 +48,7 @@ import com.satya.musicplayer.piano.PianoDialogFragment
 import com.satya.musicplayer.piano.SoundManagerProvider
 import com.satya.musicplayer.playback.*
 import com.satya.musicplayer.playback.GlobalData.manualResumeEnforced
+import com.satya.musicplayer.playback.PlaybackService.Companion.clearPlaybackCommands
 import com.satya.musicplayer.playback.PlaybackService.Companion.setPlaybackCommands
 import com.satya.musicplayer.playback.player.ALL_COMMANDS_PLAYED
 import com.satya.musicplayer.playback.player.CircularList
@@ -820,19 +821,19 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundMa
                                     updatePlaybackCommandList()
                                 }
                             }
+                            //TODO: Handle other possibilities
+                            if (GlobalData.questionAnswerSetting.value == 0) {
+                                PlaybackService.turnForPart = true
+                            } else {
+                                PlaybackService.turnForPart = false
+                            }
                         } else {
-                            GlobalData.playbackFileName.postValue("[calculated]")
-                            setPlaybackCommands(calculateCommands(duration)) {
+                            GlobalData.playbackFileName.postValue("[Playback File]")
+                            clearPlaybackCommands {
                                 runOnUiThread {
                                     updatePlaybackCommandList()
                                 }
                             }
-                        }
-                        //TODO: Handle other possibilities
-                        if (GlobalData.questionAnswerSetting.value == 0) {
-                            PlaybackService.turnForPart = true
-                        } else {
-                            PlaybackService.turnForPart = false
                         }
                         maybeSeekRandom()
                     }
