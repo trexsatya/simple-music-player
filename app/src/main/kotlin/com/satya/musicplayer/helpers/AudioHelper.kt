@@ -72,12 +72,10 @@ class AudioHelper(private val context: Context) {
         }
     }
 
-    fun getPlaybackControlFile(id: Long, callback: (String) -> Unit) {
+    fun getPlaybackControlFile(id: Long, callback: (String?) -> Unit) {
         ensureBackgroundThread {
             val playbackControlFile = context.tracksDAO.getPlaybackControlFile(id)
-            if(playbackControlFile != null) {
-                callback.invoke(playbackControlFile)
-            }
+            callback.invoke(playbackControlFile)
         }
     }
 

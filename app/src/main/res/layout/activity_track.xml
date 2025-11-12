@@ -123,7 +123,7 @@
                 android:id="@+id/activity_track_piano_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Piano"
+                android:text="PNO"
                 app:layout_constraintStart_toEndOf="@id/activity_track_toggle_shuffle"
                 app:layout_constraintTop_toTopOf="@id/activity_track_toggle_shuffle" />
 

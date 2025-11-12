@@ -25,11 +25,14 @@ import com.satya.musicplayer.extensions.*
 import com.satya.musicplayer.helpers.SEEK_INTERVAL_MS
 import com.satya.musicplayer.playback.*
 import com.satya.musicplayer.playback.GlobalData.currentlyPlayingQA
+import com.satya.musicplayer.playback.GlobalData.manualResumeEnforced
 import com.satya.musicplayer.playback.PlaybackService.Companion.DEFAULT_STOP_INTERVAL_MS
+import com.satya.musicplayer.playback.PlaybackService.Companion.commandRepeatIteration
 import com.satya.musicplayer.playback.PlaybackService.Companion.getRandomCommandToPlayNext
 import com.satya.musicplayer.playback.PlaybackService.Companion.lastDuration
 import com.satya.musicplayer.playback.PlaybackService.Companion.lastRandomPosition
 import com.satya.musicplayer.playback.PlaybackService.Companion.previousPlaybackCommand
+import com.satya.musicplayer.playback.PlaybackService.Companion.repetitionReachedMax
 import com.satya.musicplayer.playback.PlaybackService.Companion.savedSpeed
 import com.satya.musicplayer.playback.PlaybackService.Companion.timestampForNextAction
 import com.satya.musicplayer.playback.PlaybackService.Companion.updatePlaybackInfo
@@ -88,8 +91,7 @@ internal fun PlaybackService.initializeSessionAndPlayer(handleAudioFocus: Boolea
                 PlaybackService.pauseAt?.let { pauseAt ->
                     if (player.isPlaying && player.currentPosition >= pauseAt) {
                         PlaybackService.pauseAt = null
-                        PlaybackService.pausedManually = false
-                        PlaybackService.programmaticChange = true
+                        PlaybackService.programmaticChange = manualResumeEnforced.value == false
                         player.pause()
                         PlaybackService.currentPosition = player.currentPosition
                         PlaybackService.resumeAt?.let {
@@ -104,8 +106,7 @@ internal fun PlaybackService.initializeSessionAndPlayer(handleAudioFocus: Boolea
                     if (!player.isPlaying && PlaybackService.currentPosition >= resumeAt) {
                         PlaybackService.resumeAt = null
                         PlaybackService.currentPosition = player.currentPosition
-                        PlaybackService.pausedManually = false
-                        PlaybackService.programmaticChange = true
+                        PlaybackService.programmaticChange = manualResumeEnforced.value == false
                         seekRandomOrPlaySomeCommand()
                         PlaybackService.pauseAt?.let {
                             timestampForNextAction = "/p-" + formatMillis(it)
@@ -131,18 +132,33 @@ internal fun PlaybackService.initializeSessionAndPlayer(handleAudioFocus: Boolea
                         // User pressed play or pause manually
                         PlaybackService.pausedManually = !playWhenReady
                         Log.d("Playback", if (playWhenReady) "Manual resume" else "Manual pause")
+                        hack(playWhenReady)
                     }
 
                     Player.PLAY_WHEN_READY_CHANGE_REASON_REMOTE -> {
                         // Optional: remote (e.g. headset button)
                         PlaybackService.pausedManually = !playWhenReady
                         Log.d("Playback", if (playWhenReady) "Remote resume" else "Remote pause")
+                        hack(playWhenReady)
                     }
 
                     else -> {
                         // Automatic change (timer, playlist, focus, etc.)
                         // Ignore – not user-initiated
                     }
+                }
+            }
+
+            private fun hack(playWhenReady: Boolean) {
+                timestampForNextAction = if (!playWhenReady) {
+                    "r-${PlaybackService.resumeAt?.let { formatMillis(it) }}"
+                } else {
+                    "p-${PlaybackService.pauseAt?.let { formatMillis(it) }}"
+                }
+                // Resuming, should be able to pause at some point
+                if (playWhenReady && (PlaybackService.pauseAt == null)) {
+                    //PlaybackService.resumeAt = player.currentPosition + defaultDurations().first
+                    seekRandomOrPlaySomeCommand()
                 }
             }
         })
@@ -169,9 +185,6 @@ private fun updatePlaybackContent(txt: String) {
 internal fun PlaybackService.mediaNextButtonClicked(player: SimpleMusicPlayer) {
     skipCurrentCommand()
 }
-
-var commandRepeatIteration = 0
-var repetitionReachedMax = false
 
 internal fun PlaybackService.playSpecificCommand(id: Int) {
     val (_, resumePlayingAfterMs) = defaultDurations()
@@ -296,7 +309,7 @@ private fun PlaybackService.seekRandomInternalOrPlayPart() {
                 playNewCommand(resumePlayingAfterMs)
                 commandRepeatIteration = 0
                 repetitionReachedMax = false
-                GlobalData.repeatRemaining.postValue(maxRepeat - commandRepeatIteration )
+                GlobalData.repeatRemaining.postValue(maxRepeat)
             }
         }
         GlobalData.repeatRemaining.postValue(maxRepeat - commandRepeatIteration )
@@ -315,7 +328,6 @@ private fun PlaybackService.seekPlayerOrRepeatPosition() {
                 repetitionReachedMax = commandRepeatIteration >= maxRepeat
             }
         } else {
-            // New position
             playNewPosition(pauseAfterMs, resumePlayingAfterMs)
         }
         GlobalData.repeatRemaining.postValue(maxRepeat - commandRepeatIteration)
@@ -339,9 +351,12 @@ private fun PlaybackService.seekAndPlay(
     withPlayer {
         player.seekTo(tm1)
         player.play()
-        PlaybackService.pauseAt = (tm1 + pauseAfterMs) % player.duration
-        PlaybackService.resumeAt = (tm1 + pauseAfterMs + resumePlayingAfterMs) % player.duration
+        val pauseAt = tm1 + pauseAfterMs
+        PlaybackService.pauseAt = pauseAt
+        val resumeAt = pauseAt + resumePlayingAfterMs
+        PlaybackService.resumeAt = resumeAt
         updatePlaybackContent(msg)
+        timestampForNextAction = "p-${formatMillis(pauseAt)}"
     }
     lastRandomPosition = tm1
     lastDuration = pauseAfterMs

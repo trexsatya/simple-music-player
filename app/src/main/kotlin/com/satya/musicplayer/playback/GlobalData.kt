@@ -7,7 +7,8 @@ const val DEFAULT_RANDOM_ENABLED_SETTING = false
 
 class Event<T>(val content: T)
 
-const val DEFAULT_PLAY_DURATION = 30
+const val DEFAULT_PLAY_DURATION_SECONDS = 30
+const val DEFAULT_MANUAL_RESUME = false
 
 object GlobalData {
     val playbackCountdown = MutableLiveData("")
@@ -22,8 +23,9 @@ object GlobalData {
     val repeatRemaining = MutableLiveData(0)
     val playedQaCommandIds: MutableLiveData<Set<Int>> = MutableLiveData(setOf())
     val playedTrackId = MutableLiveData(-1)
-    val playDurationSeconds = MutableLiveData(DEFAULT_PLAY_DURATION)
+    val playDurationSeconds = MutableLiveData(DEFAULT_PLAY_DURATION_SECONDS)
     val manualPlayPause = MutableLiveData(false)
     val questionAnswerSetting = MutableLiveData(0)
     val message = MutableLiveData<Event<String>>()
+    val manualResumeEnforced = MutableLiveData(DEFAULT_MANUAL_RESUME)
 }

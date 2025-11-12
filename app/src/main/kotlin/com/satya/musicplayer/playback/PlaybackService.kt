@@ -127,6 +127,8 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
         internal var lastDuration: Long? = null
         const val DEFAULT_STOP_INTERVAL_MS = 10_000L
         internal var savedSpeed = 1.0f
+        var commandRepeatIteration = 0
+        var repetitionReachedMax = false
 
         /**
          * part or counterpart: if part is ques, counterpart is answer and vice-versa
@@ -199,6 +201,22 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
                 commandPlayedNow.isAnswer()
             }
             turnForPart = !isPartPlayedNow
+        }
+
+        fun reset() {
+            GlobalData.currentlyPlayingQA.postValue(null)
+            GlobalData.playedQaCommandIds.postValue(setOf())
+            lastRandomPosition = 0
+            lastDuration = null
+            turnForPart = true
+            currentPosition = 0
+            qaCommandListShuffled = ShuffleBag(listOf())
+            val defaultPlayDuration = (GlobalData.playDurationSeconds.value ?: DEFAULT_STOP_INTERVAL_MS).toLong() * 1000
+            pauseAt = defaultPlayDuration
+            resumeAt = defaultPlayDuration + (GlobalData.pauseDurationSeconds.value ?: DEFAULT_STOP_INTERVAL_MS).toLong() * 1000
+            commandRepeatIteration = 0
+            repetitionReachedMax = false
+            playbackSpeeds.reset()
         }
     }
 }

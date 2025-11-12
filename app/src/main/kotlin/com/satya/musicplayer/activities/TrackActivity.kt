@@ -47,16 +47,16 @@ import com.satya.musicplayer.models.Track
 import com.satya.musicplayer.piano.PianoDialogFragment
 import com.satya.musicplayer.piano.SoundManagerProvider
 import com.satya.musicplayer.playback.*
-import com.satya.musicplayer.playback.PlaybackService.Companion.clearPlaybackCommands
+import com.satya.musicplayer.playback.GlobalData.manualResumeEnforced
 import com.satya.musicplayer.playback.PlaybackService.Companion.setPlaybackCommands
 import com.satya.musicplayer.playback.player.ALL_COMMANDS_PLAYED
 import com.satya.musicplayer.playback.player.CircularList
 import com.satya.musicplayer.playback.player.NEW_COMMAND_WILL_PLAY
-import com.satya.musicplayer.playback.player.ShuffleBag
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.MEDIUM_ALPHA
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
 import java.text.DecimalFormat
+import java.util.concurrent.TimeUnit
 import kotlin.math.min
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -349,27 +349,20 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundMa
             activityTrackPlayPause.setOnClickListener { togglePlayback() }
             activityTrackNext.setOnClickListener { withPlayer { forceSeekToNext() } }
 
+            playbackFileContainer.activityPlaybackManualResume.setOnCheckedChangeListener { _, checked ->
+                manualResumeEnforced.postValue(checked)
+            }
+
             playbackFileContainer.activityPlayDurationSecs.minValue = 0
             playbackFileContainer.activityPlayDurationSecs.maxValue = durationValues.size - 1
             playbackFileContainer.activityPauseDurationSecs.minValue = 0
             playbackFileContainer.activityPauseDurationSecs.maxValue = durationValues.size - 1
 
             playbackFileContainer.activityPlayDurationSecs.displayedValues = durationValues.toTypedArray()
-            val defaultDuration = DEFAULT_PLAY_DURATION
-            val savedPlayDurationIndex = durationValues.indexOfFirst {
-                it == (sharedPreferences?.getInt(
-                    PLAY_DURATION_SECONDS_KEY,
-                    defaultDuration
-                ) ?: defaultDuration).toString() + "s"
-            }
+            val savedPlayDurationIndex = sharedPreferences?.getInt(PLAY_DURATION_SECONDS_KEY, 0) ?: 0
             playbackFileContainer.activityPlayDurationSecs.value = savedPlayDurationIndex.coerceAtLeast(0)
             playbackFileContainer.activityPauseDurationSecs.displayedValues = durationValues.toTypedArray()
-            val savedPauseDurationIndex = durationValues.indexOfFirst {
-                it == (sharedPreferences?.getInt(
-                    PAUSE_DURATION_SECONDS_KEY,
-                    defaultDuration
-                ) ?: defaultDuration).toString() + "s"
-            }
+            val savedPauseDurationIndex = sharedPreferences?.getInt(PAUSE_DURATION_SECONDS_KEY, 0) ?: 0
             playbackFileContainer.activityPauseDurationSecs.value = savedPauseDurationIndex.coerceAtLeast(0)
 
             //Initial values
@@ -481,6 +474,9 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundMa
         }
 
         var snapshot = PlaybackService.qaCommandListShuffled.remainingListInOriginalOrder().filterNot { it.id in alreadyPlayed }
+        if(snapshot.isEmpty()) {
+            return b
+        }
         if(!PlaybackService.qaCommandListShuffled.isEmpty()) {
             //Because ShuffleBag.next removes the item
             GlobalData.currentlyPlayingQA.value?.let {  current ->
@@ -807,46 +803,57 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundMa
         withPlayer {
             setupTrackInfo(currentMediaItem)
             setupNextTrackInfo(nextMediaItem)
-            PlaybackService.qaCommandListShuffled = ShuffleBag(listOf())
             val track = this.currentMediaItem?.toTrack()
             val id = track?.id
             track?.trackId?.let {  GlobalData.playedTrackId.postValue(it) }
-            GlobalData.currentlyPlayingQA.postValue(null)
-            GlobalData.playedQaCommandIds.postValue(setOf())
-            PlaybackService.lastRandomPosition = 0
-            PlaybackService.lastDuration = null
-            PlaybackService.turnForPart = true
+            PlaybackService.reset()
             maybeSeekRandom()
 
             if (id != null) {
+                val duration = track.duration
                 ctx.audioHelper.getPlaybackControlFile(id) { playbackFile ->
                     ensureBackgroundThread {
-                        if (playbackFile.isNotEmpty()) {
+                        if (!playbackFile.isNullOrEmpty()) {
                             GlobalData.playbackFileName.postValue("<from db>")
                             setPlaybackCommands(playbackFile.trimIndent()) {
                                 runOnUiThread {
                                     updatePlaybackCommandList()
                                 }
                             }
-                            //TODO: Handle other possibilities
-                            if (GlobalData.questionAnswerSetting.value == 0) {
-                                PlaybackService.turnForPart = true
-                            } else {
-                                PlaybackService.turnForPart = false
-                            }
                         } else {
-                            GlobalData.playbackFileName.postValue("[Playback File]")
-                            clearPlaybackCommands {
+                            GlobalData.playbackFileName.postValue("[calculated]")
+                            setPlaybackCommands(calculateCommands(duration)) {
                                 runOnUiThread {
                                     updatePlaybackCommandList()
                                 }
                             }
+                        }
+                        //TODO: Handle other possibilities
+                        if (GlobalData.questionAnswerSetting.value == 0) {
+                            PlaybackService.turnForPart = true
+                        } else {
+                            PlaybackService.turnForPart = false
                         }
                         maybeSeekRandom()
                     }
                 }
             }
         }
+    }
+
+    @SuppressLint("DefaultLocale")
+    private fun calculateCommands(durationInSecs: Int): String {
+        val intervalSec = GlobalData.playDurationSeconds.value ?: (DEFAULT_PLAY_DURATION_SECONDS)
+        val builder = StringBuilder()
+        var current = 0
+        while (current < durationInSecs) {
+            val hours = TimeUnit.SECONDS.toHours(current.toLong())
+            val minutes = TimeUnit.SECONDS.toMinutes(current.toLong()) % 60
+            val seconds = current % 60
+            builder.append(String.format("%02d:%02d:%02d ->\n", hours, minutes, seconds))
+            current += intervalSec
+        }
+        return builder.toString()
     }
 
     private fun maybeSeekRandom() {
