@@ -48,6 +48,7 @@ import com.satya.musicplayer.piano.PianoDialogFragment
 import com.satya.musicplayer.piano.SoundManagerProvider
 import com.satya.musicplayer.playback.*
 import com.satya.musicplayer.playback.GlobalData.manualResumeEnforced
+import com.satya.musicplayer.playback.PlaybackService.Companion.changeInPianoDisplay
 import com.satya.musicplayer.playback.PlaybackService.Companion.clearPlaybackCommands
 import com.satya.musicplayer.playback.PlaybackService.Companion.setPlaybackCommands
 import com.satya.musicplayer.playback.player.ALL_COMMANDS_PLAYED
@@ -69,7 +70,7 @@ private const val PLAY_DURATION_SECONDS_KEY = "playDurationSeconds"
 private const val PAUSE_DURATION_SECONDS_KEY = "pauseDurationSeconds"
 private const val PLAYED_COMMANDS_IDS_KEY = "playedCommandsIndices"
 private const val PLAYED_TRACK_ID_KEY = "playedTrackId"
-const val DEFAULT_COMMAND_SLOWDOWN_STRATEGY = "0.5,0.6,1,0.7"
+const val DEFAULT_COMMAND_SLOWDOWN_STRATEGY = "1,0.5,0.6,1,0.7"
 private const val ID_SPLITTER = " || "
 
 class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundManagerProvider {
@@ -203,6 +204,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundMa
         }
 
         binding.closePianoBtn.setOnClickListener {
+            changeInPianoDisplay = true
             binding.pianoOverlay.visibility = GONE
         }
     }
@@ -212,6 +214,7 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundMa
     }
 
     private fun showPiano() {
+        changeInPianoDisplay = true
         val frag = PianoDialogFragment()
         frag.show(supportFragmentManager, "piano_dialog")
     }
@@ -263,6 +266,11 @@ class TrackActivity : SimpleControllerActivity(), PlaybackSpeedListener, SoundMa
         val topFragment = supportFragmentManager.findFragmentByTag("piano_dialog")
 
         if (topFragment?.isVisible == true && topFragment is DialogFragment) {
+            return
+        }
+
+        if(changeInPianoDisplay) {
+            changeInPianoDisplay = false
             return
         }
         sharedPreferences = getSharedPreferences("com.satya.musicplayer", Context.MODE_PRIVATE)

@@ -116,6 +116,7 @@ dependencies {
     implementation(libs.m3u.parser)
     implementation(libs.autofittextview)
     implementation(libs.jaudiotagger)
+    implementation(libs.androidx.media3.ui)
     androidTestImplementation(libs.junit.junit)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 

@@ -1,19 +1,29 @@
 package com.satya.musicplayer.playback
 
-import android.os.Handler
-import android.os.HandlerThread
-import android.os.Looper
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_IMMUTABLE
+import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
+import android.os.*
 import androidx.annotation.OptIn
 import androidx.core.os.postDelayed
 import androidx.media3.common.*
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.*
+import androidx.media3.ui.PlayerNotificationManager
 import com.satya.musicplayer.PlaybackCommand
 import com.satya.musicplayer.PlaybackCommand.Companion.buildListWithEndTimes
+import com.satya.musicplayer.R
+import com.satya.musicplayer.activities.MainActivity
 import com.simplemobiletools.commons.extensions.hasPermission
 import com.simplemobiletools.commons.extensions.showErrorToast
 import com.satya.musicplayer.extensions.*
 import com.satya.musicplayer.helpers.NotificationHelper
+import com.satya.musicplayer.helpers.NotificationHelper.Companion.NOTIFICATION_ID
 import com.satya.musicplayer.helpers.getPermissionToRequest
 import com.satya.musicplayer.playback.library.MediaItemProvider
 import com.satya.musicplayer.playback.player.CircularList
@@ -31,14 +41,29 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
     internal lateinit var playerHandler: Handler
     internal lateinit var mediaSession: MediaLibrarySession
     internal lateinit var mediaItemProvider: MediaItemProvider
-
+    private var wakeLock: PowerManager.WakeLock? = null
     internal var currentRoot = ""
 
     override fun onCreate() {
         super.onCreate()
         setListener(this)
+        val notification = NotificationHelper.createInstance(this).createMediaScannerNotification("Text", 100, 100)
+
         initializeSessionAndPlayer(handleAudioFocus = true, handleAudioBecomingNoisy = true, skipSilence = config.gaplessPlayback)
         initializeLibrary()
+
+        // Required for Android 14+
+        startForeground(
+            NOTIFICATION_ID,
+            notification
+        )
+
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        if (wakeLock == null) {
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "PlaybackService::WakeLock")
+            wakeLock?.setReferenceCounted(false)
+            wakeLock?.acquire(30*60_000)
+        }
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo) = mediaSession
@@ -65,8 +90,9 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
         mediaItemProvider = MediaItemProvider(this)
         if (hasPermission(getPermissionToRequest())) {
             mediaItemProvider.reload()
+        } else {
+            showNoPermissionNotification()
         }
-        showNoPermissionNotification()
     }
 
     private fun releaseMediaSession() {
@@ -129,6 +155,7 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
         internal var savedSpeed = 1.0f
         var commandRepeatIteration = 0
         var repetitionReachedMax = false
+        var changeInPianoDisplay = false
 
         /**
          * part or counterpart: if part is ques, counterpart is answer and vice-versa
@@ -219,5 +246,26 @@ class PlaybackService : MediaLibraryService(), MediaSessionService.Listener {
             playbackSpeeds.reset()
         }
     }
+}
+
+class MyDescriptionAdapter(playbackService: PlaybackService, applicationContext: Context) : PlayerNotificationManager.MediaDescriptionAdapter {
+    private val context = applicationContext
+    override fun getCurrentContentTitle(player: Player): CharSequence {
+        return player.currentMediaItem?.toTrack()?.title ?: "Title"
+    }
+
+    override fun createCurrentContentIntent(player: Player): PendingIntent? {
+        val contentIntent = Intent(context, MainActivity::class.java)
+        return PendingIntent.getActivity(context, 0, contentIntent, FLAG_IMMUTABLE)
+    }
+
+    override fun getCurrentContentText(player: Player): CharSequence? {
+        return player.currentMediaItem?.toTrack()?.title
+    }
+
+    override fun getCurrentLargeIcon(player: Player, callback: PlayerNotificationManager.BitmapCallback): Bitmap? {
+        return null
+    }
+
 }
 

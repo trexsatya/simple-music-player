@@ -35,14 +35,15 @@ app-build-kotlinJVMTarget = "17"
 shortcut-badger = "1.1.22"
 #versioning
 app-version-appId = "com.satya.musicplayer"
-app-version-versionCode = "176"
-app-version-versionName = "5.18.61"
+app-version-versionCode = "180"
+app-version-versionName = "5.18.65"
 junitVersion = "4.13"
 robolectric = "4.12.2"
 androidx-test-core = "1.5.0"
 androidx-test-ext-junit = "1.1.5"
 mockito = "5.7.0" # latest stable as of 2025
-mockito-kotlin = "5.2.1" # optional helper for Kotlin
+mockito-kotlin = "5.2.1"
+media3Ui = "1.8.0" # optional helper for Kotlin
 [libraries]
 #AndroidX
 androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidx-constraintlayout" }
@@ -73,6 +74,7 @@ lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 autofittextview = { module = "me.grantland:autofittextview", version.ref = "autofittextview" }
 m3u-parser = { module = "com.github.bjoernpetersen:m3u-parser", version.ref = "m3uParser" }
 junit-junit = { group = "junit", name = "junit", version.ref = "junitVersion" }
+androidx-media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3Ui" }
 [bundles]
 room = [
     "androidx-room-ktx",

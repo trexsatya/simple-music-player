@@ -10,6 +10,7 @@ import android.widget.LinearLayout
 import android.widget.ToggleButton
 import androidx.fragment.app.DialogFragment
 import com.satya.musicplayer.PianoSoundManager
+import com.satya.musicplayer.playback.PlaybackService.Companion.changeInPianoDisplay
 
 class PianoDialogFragment : DialogFragment() {
 
@@ -63,7 +64,10 @@ class PianoDialogFragment : DialogFragment() {
 
         val closeButton = Button(requireContext()).apply {
             text = "Close"
-            setOnClickListener { dismiss() }
+            setOnClickListener {
+                changeInPianoDisplay = true
+                dismiss()
+            }
         }
 
         val pedalButton = Button(requireContext()).apply {

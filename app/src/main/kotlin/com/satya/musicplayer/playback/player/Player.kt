@@ -151,9 +151,9 @@ internal fun PlaybackService.initializeSessionAndPlayer(handleAudioFocus: Boolea
 
             private fun hack(playWhenReady: Boolean) {
                 timestampForNextAction = if (!playWhenReady) {
-                    "r-${PlaybackService.resumeAt?.let { formatMillis(it) }}"
+                    "/r-${PlaybackService.resumeAt?.let { formatMillis(it) }}"
                 } else {
-                    "p-${PlaybackService.pauseAt?.let { formatMillis(it) }}"
+                    "/p-${PlaybackService.pauseAt?.let { formatMillis(it) }}"
                 }
                 // Resuming, should be able to pause at some point
                 if (playWhenReady && (PlaybackService.pauseAt == null)) {
@@ -213,7 +213,6 @@ internal fun PlaybackService.skipCurrentCommand() {
 }
 
 internal fun PlaybackService.seekRandomOrPlaySomeCommand() {
-    cancelScheduledPauseResume()
     waitForDurationAndRun {
         if (!questionAnswerEnabled()) {
             seekRandomInternalOrPlayPart()
@@ -356,7 +355,7 @@ private fun PlaybackService.seekAndPlay(
         val resumeAt = pauseAt + resumePlayingAfterMs
         PlaybackService.resumeAt = resumeAt
         updatePlaybackContent(msg)
-        timestampForNextAction = "p-${formatMillis(pauseAt)}"
+        timestampForNextAction = "/p-${formatMillis(pauseAt)}"
     }
     lastRandomPosition = tm1
     lastDuration = pauseAfterMs
@@ -438,7 +437,6 @@ private fun PlaybackService.executeCommand(
         PlaybackService.currentPosition = commandToExecuteNow.startTimeMs
         player.play()
 
-        cancelScheduledPauseResume()
         updatePlaybackContent("$id || $msg")
         Log.d("PlaybackService", "Playing ${commandToExecuteNow.id} $commandToExecuteNow")
 
@@ -499,17 +497,6 @@ private fun <T> MutableLiveData<FixedSizeQueue<T>>.removeItem(item: T) {
 }
 
 private fun questionAnswerEnabled() = GlobalData.questionAnswerSetting.value != null
-
-// place near top of file (reuse your existing handler)
-private var scheduledCycleId = 0L
-private var nextScheduledPauseAction: Runnable? = null
-private var nextScheduledResumeAction: Runnable? = null
-private val scheduler = handler // already Handler(Looper.getMainLooper())
-private var isInStop = false
-
-internal fun PlaybackService.cancelScheduledPauseResume() {
-
-}
 
 const val NEW_COMMAND_WILL_PLAY = "newCommandWillPlay"
 const val ALL_COMMANDS_PLAYED = "allCommandsPlayed"
